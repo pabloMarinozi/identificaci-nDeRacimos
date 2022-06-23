@@ -1,0 +1,73 @@
+---
+title: "Resultados para nubes completas con ruido"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Descripción del experimento
+El experimento realizado fue hecho sobre 62 racimos completos. Consistía en aplicar el algoritmo ICP sobre cada par de racimos con los siguientes valores para sus hiperparámetros.
+
+* ruido gaussiano con una std de 0.05 **(TODO: probar distintos ruidos)**
+* cantidad de restarts del algoritmo: [4,6,8,12] (se giraba sistemáticamente una de las dos nubes para asegurar la convergencia)
+* radio de matcheo: [0.1,0.2,0.3,0.4,0.5,1] (porcentaje de la distancia mínima entre dos puntos de la primera nube)
+
+```{r message=FALSE, include=FALSE}
+library(tidyverse)
+df1 = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
+                read_csv("nubes_completas_conruido0.2.csv"),
+                read_csv("nubes_completas_conruido0.3.csv"),
+                read_csv("nubes_completas_conruido0.4.csv"),
+                read_csv("nubes_completas_conruido0.5.csv"),
+                read_csv("nubes_completas_conruido1.csv")) %>% unique()
+```
+
+## Resultados
+
+#### Radios
+
+A continuación, se procede a graficar los resultados obtenidos. El eje x es el fitness (porcentaje de puntos de la primer nube que matchearon) y el eje y es el rmse (error cuadrático medio de las distancias entre los puntos que matchearon). Los puntos azules son comparaciones entre nubes correspondientes al mismo racimo y los rojos, entre nubes de racimos distintos. Cada gráfico corresponde a un radio de matcheo distinto.
+
+```{r}
+df2 <- df1 %>% mutate(label = nube1 == nube2) %>% mutate(fitness = matcheos/tamaño_nube1 )
+for (r in df2$radio %>% unique()){
+  plot(ggplot(data = df2 %>% filter(radio == r)) + geom_point(aes(x=fitness,y=rmse,col=label,alpha = 1/10)) + facet_wrap(~label) + ggtitle( paste("Radio",r)))
+} 
+
+```
+
+Se puede observar que a medida que aumenta el radio, aumenta la cantidad de matcheos en ambos tipos de nubes. Sin embargo, el rmse de las nubes de un mismo racimo se mantiene bajo, esto asegura que sigan siendo separables.
+
+
+Mirando el gráfico concluyo que es mejor elegir un threshold de 0.8 para el fitness y 0.2 para el rmse. A continuación mostramos los precission y recall para cada radio de matcheo teniendo en cuenta estos thresholds. 
+
+```{r}
+df3 <- df2 %>% mutate(prediction = fitness>0.8 & rmse <0.2) %>% group_by(radio) %>% summarise(
+  TP = sum(label==TRUE & prediction==TRUE),
+  TN = sum(label==FALSE & prediction==FALSE),
+  FP = sum(label==FALSE & prediction==TRUE),
+  FN = sum(label==TRUE & prediction==FALSE),
+  precission = TP/(TP+FP), recall = TP/(TP+FN))
+df3
+```
+
+Podemos ver que la precission es perfecta, pero (sorprendentemente) el recall va mejorando a medida que se aumenta el radio. 
+
+**TODO: seguir probando con radios mayores hasta notar una disminución en el precission.**
+
+#### Giros
+
+Por último, el siguiente cuadro nos muestra que el nuevo algoritmo que alinea las nubes antes de hacer ICP es indiferente a la cantidad de giros dados para reiniciar el algoritmo (por lo menos a partir de 4)
+
+**TODO: probar con menos giros para reducir el costo computacional de los experimentos**
+
+```{r}
+df4 <- df2 %>% mutate(prediction = fitness>0.8 & rmse <0.2) %>% group_by(giros) %>% summarise(
+  TP = sum(label==TRUE & prediction==TRUE),
+  TN = sum(label==FALSE & prediction==FALSE),
+  FP = sum(label==FALSE & prediction==TRUE),
+  FN = sum(label==TRUE & prediction==FALSE),
+  precission = TP/(TP+FP), recall = TP/(TP+FN))
+df4
+```
+

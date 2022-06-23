@@ -1,0 +1,9 @@
+ply
+format ascii 1.0           
+element vertex 2
+property double x           
+property double y           
+property double z           
+end_header
+-4.59964 0.297537 39.87
+-1.62988 2.1961 39.5326
