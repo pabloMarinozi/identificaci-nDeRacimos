@@ -1,0 +1,13 @@
+ply
+format ascii 1.0
+comment Created by Open3D
+element vertex 5
+property double x
+property double y
+property double z
+end_header
+-0.651836 -1.75244 33.1437
+-1.87217 0.131664 32.6343
+-0.373748 0.549879 33.3335
+-1.46922 -3.45239 31.3564
+1.92809 -2.53076 32.6134

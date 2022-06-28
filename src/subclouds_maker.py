@@ -1,6 +1,30 @@
 import numpy as np
 import open3d as o3d
 import copy
+import os
+from cloud_management import conform_point_cloud
+
+def extract_points(pc, center, n_points, type_flag):
+    """type_flag: True return poincloud, False return np.array"""
+    pc_tree = o3d.geometry.KDTreeFlann(pc)
+    points = np.asarray(pc.points)
+    # points = np.append(points, [[0, 0, 0]], axis=0)
+    [k, idx, dist] = pc_tree.search_knn_vector_3d(center, n_points)
+    sub_cloud_points = points[idx, :]
+    if type_flag:
+        sub_cloud = copy.deepcopy(pc)
+        sub_cloud.points = o3d.utility.Vector3dVector(sub_cloud_points)
+        return sub_cloud, idx
+    else:
+        return sub_cloud_points, idx
+
+def get_overlap(idxs_1, idxs_2):
+    overlap = 0
+    for idx1 in idxs_1:
+        for idx2 in idxs_2:
+            if idx1 == idx2:
+                overlap += 1
+    return overlap
 
 def check_ids_repetition(ids, ids_list, n_iter):
     n_ids = len(ids)
@@ -69,7 +93,7 @@ def get_sub_cloud_dataset(pc, n_points):
     # print(points_clouds.shape)
     return points_clouds, ids_list
 
-def get_bunch_dataset(cloud, overlap_min):
+def get_bunch_dataset(cloud, overlap_min, name):
     n_points = len(np.asarray(cloud.points))
     clouds = []
     ids_tuple= ()
@@ -83,8 +107,13 @@ def get_bunch_dataset(cloud, overlap_min):
     sub_cloud_pairs =[]
     n_clouds = len(clouds)
     for i in range(n_clouds):
-        for j in range(n_clouds):
+        try: 
+            os.mkdir(name)
+        except OSError as exc:
+            pass
+        o3d.io.write_point_cloud(name+"/"+str(i)+".ply",clouds[i],write_ascii=True)
+        for j in range(i,n_clouds):
             overlap = get_overlap(ids_tuple[i], ids_tuple[j])
-            sub_cloud_tuple = (clouds[i], clouds[j], overlap)
+            sub_cloud_tuple = (i,j,clouds[i], clouds[j], overlap)
             sub_cloud_pairs.append(sub_cloud_tuple)
     return  sub_cloud_pairs

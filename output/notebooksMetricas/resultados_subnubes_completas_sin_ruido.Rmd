@@ -1,0 +1,89 @@
+---
+title: "Resultados para subnubes de un mismo racimo sin ruido"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Descripción del experimento
+
+El experimento realizado fue hecho sobre las todas las subnubes posibles de al menos 5 bayas extraidas de 30 racimos completos. Consistía en aplicar el algoritmo ICP sobre cada par de subnubes DE UN MISMO RACIMO con los siguientes valores para sus hiperparámetros.
+
+* sin ruido
+* cantidad de restarts del algoritmo: 4
+* radio de matcheo: [0.1,0.2,0.3,0.4,0.5,1] (porcentaje de la distancia mínima entre dos puntos de la primera nube)
+
+```{r message=FALSE, include=FALSE}
+library(tidyverse)
+setwd("~/icp/identificaci-nDeRacimos/output")
+df1 = read_csv("subnubes_sin_ruido_nube0.csv")
+for(i in 1:31){
+  if(i==14) next
+  path = paste0("subnubes_sin_ruido_nube",i,".csv")
+  df1 = bind_rows(df1,read_csv(path))
+}
+df1 <- df1 %>%  unique()
+```
+
+## Resultados
+
+#### Radios
+
+```{r}
+nubes_malas <- c(2,8,12,29,30,38,54)
+df2 <- df1 %>% filter(!(nube_completa %in% nubes_malas)) %>%
+  filter(nube_completa<5) %>%
+  mutate(label = subnube1 == subnube2) %>% filter(label==FALSE)
+df2_malas <- df1 %>% filter(nube_completa %in% nubes_malas) %>%
+  mutate(label = subnube1 == subnube2) %>% filter(label==FALSE)
+for (r in df2$radio %>% unique()){
+  plot(ggplot(data = df2 %>% filter(radio == r)) + geom_count(aes(x=overlap,y=matcheos,col=matcheos==overlap)) + ggtitle( paste("Radio",r)))
+} 
+
+```
+
+```{r}
+
+df3 <- df2 %>% mutate(acierto = overlap==matcheos) %>%
+  group_by(overlap,radio) %>%
+  summarise(accuracy = sum(acierto)/n())  
+ggplot(df3) + geom_line(aes(x=overlap,y=accuracy)) + facet_wrap(~radio)
+```
+```{r}
+setwd("~/icp/identificaci-nDeRacimos/output/salidasICP/nubes_completas_con_ruido")
+df_completas = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
+                read_csv("nubes_completas_conruido0.2.csv"),
+                read_csv("nubes_completas_conruido0.3.csv"),
+                read_csv("nubes_completas_conruido0.4.csv"),
+                read_csv("nubes_completas_conruido0.5.csv"),
+                read_csv("nubes_completas_conruido1.csv")) %>% unique()
+```
+ 
+```{r}
+
+df_completas %>% 
+  filter(!(nube1 %in% nubes_malas) & !(nube2 %in% nubes_malas)) %>%
+  filter(nube1 < 5 & nube2<5) %>% 
+  mutate(label = nube1 == nube2) %>%
+  mutate(fitness = matcheos/tamaño_nube1) %>% 
+  mutate(prediction = matcheos>6) %>%
+  group_by(radio) %>% summarise(
+  TP = sum(label==TRUE & prediction==TRUE),
+  TN = sum(label==FALSE & prediction==FALSE),
+  FP = sum(label==FALSE & prediction==TRUE),
+  FN = sum(label==TRUE & prediction==FALSE),
+  precission = TP/(TP+FP), recall = TP/(TP+FN))
+```
+```{r}
+df2 %>% filter(overlap>5) %>% mutate(label = TRUE) %>%
+  mutate(fitness = matcheos/tamaño_subnube1) %>% 
+  
+  mutate(prediction = fitness>0.7 & rmse <0.2) %>%
+  group_by(radio) %>% summarise(
+  TP = sum(label==TRUE & prediction==TRUE),
+  TN = sum(label==FALSE & prediction==FALSE),
+  FP = sum(label==FALSE & prediction==TRUE),
+  FN = sum(label==TRUE & prediction==FALSE),
+  precission = TP/(TP+FP), recall = TP/(TP+FN))
+```
+

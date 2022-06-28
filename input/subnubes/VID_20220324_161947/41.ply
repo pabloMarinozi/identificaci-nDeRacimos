@@ -1,0 +1,15 @@
+ply
+format ascii 1.0
+comment Created by Open3D
+element vertex 7
+property double x
+property double y
+property double z
+end_header
+1.00363 0.18778 37.0826
+1.44292 -0.898826 36.3438
+0.0199805 1.64803 37.4315
+0.341999 -0.602911 35.411
+1.30987 -1.99635 37.6814
+-1.01791 1.44387 36.3822
+-1.79827 0.548298 35.701

@@ -74,15 +74,6 @@ def custom_roto_translate(pc, rot, translate):
     points = np.dot(points, rot)
     pc.points = o3d.utility.Vector3dVector(points)
 
-def get_overlap(idxs_1, idxs_2):
-    overlap = 0
-    for idx1 in idxs_1:
-        for idx2 in idxs_2:
-            if idx1 == idx2:
-                overlap += 1
-    return overlap
-
-
 def icp_from_neighbors(source, target, threshold, n_neighbors, angle_step, distances_tolerance):
     """devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)"""
     highest_fitness = 0

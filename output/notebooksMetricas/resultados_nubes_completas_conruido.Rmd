@@ -14,7 +14,8 @@ El experimento realizado fue hecho sobre 62 racimos completos. Consistía en apl
 
 ```{r message=FALSE, include=FALSE}
 library(tidyverse)
-df1 = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
+setwd("~/icp/identificaci-nDeRacimos/output/salidasICP/nubes_completas_con_ruido")
+df1_ = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
                 read_csv("nubes_completas_conruido0.2.csv"),
                 read_csv("nubes_completas_conruido0.3.csv"),
                 read_csv("nubes_completas_conruido0.4.csv"),
@@ -29,9 +30,9 @@ df1 = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
 A continuación, se procede a graficar los resultados obtenidos. El eje x es el fitness (porcentaje de puntos de la primer nube que matchearon) y el eje y es el rmse (error cuadrático medio de las distancias entre los puntos que matchearon). Los puntos azules son comparaciones entre nubes correspondientes al mismo racimo y los rojos, entre nubes de racimos distintos. Cada gráfico corresponde a un radio de matcheo distinto.
 
 ```{r}
-df2 <- df1 %>% mutate(label = nube1 == nube2) %>% mutate(fitness = matcheos/tamaño_nube1 )
-for (r in df2$radio %>% unique()){
-  plot(ggplot(data = df2 %>% filter(radio == r)) + geom_point(aes(x=fitness,y=rmse,col=label,alpha = 1/10)) + facet_wrap(~label) + ggtitle( paste("Radio",r)))
+df2_ <- df1_ %>% mutate(label = nube1 == nube2) %>% mutate(fitness = matcheos/tamaño_nube1 )
+for (r in df2_$radio %>% unique()){
+  plot(ggplot(data = df2_ %>% filter(radio == r)) + geom_point(aes(x=fitness,y=rmse,col=label,alpha = 1/10)) + facet_wrap(~label) + ggtitle( paste("Radio",r)))
 } 
 
 ```
@@ -42,13 +43,13 @@ Se puede observar que a medida que aumenta el radio, aumenta la cantidad de matc
 Mirando el gráfico concluyo que es mejor elegir un threshold de 0.8 para el fitness y 0.2 para el rmse. A continuación mostramos los precission y recall para cada radio de matcheo teniendo en cuenta estos thresholds. 
 
 ```{r}
-df3 <- df2 %>% mutate(prediction = fitness>0.8 & rmse <0.2) %>% group_by(radio) %>% summarise(
+df3_ <- df2_ %>% mutate(prediction = fitness>0.7 & rmse <0.2) %>% group_by(radio) %>% summarise(
   TP = sum(label==TRUE & prediction==TRUE),
   TN = sum(label==FALSE & prediction==FALSE),
   FP = sum(label==FALSE & prediction==TRUE),
   FN = sum(label==TRUE & prediction==FALSE),
   precission = TP/(TP+FP), recall = TP/(TP+FN))
-df3
+df3_
 ```
 
 Podemos ver que la precission es perfecta, pero (sorprendentemente) el recall va mejorando a medida que se aumenta el radio. 
@@ -62,12 +63,41 @@ Por último, el siguiente cuadro nos muestra que el nuevo algoritmo que alinea l
 **TODO: probar con menos giros para reducir el costo computacional de los experimentos**
 
 ```{r}
-df4 <- df2 %>% mutate(prediction = fitness>0.8 & rmse <0.2) %>% group_by(giros) %>% summarise(
+df4_ <- df2_ %>% mutate(prediction = fitness>0.8 & rmse <0.2) %>% group_by(giros) %>% summarise(
   TP = sum(label==TRUE & prediction==TRUE),
   TN = sum(label==FALSE & prediction==FALSE),
   FP = sum(label==FALSE & prediction==TRUE),
   FN = sum(label==TRUE & prediction==FALSE),
   precission = TP/(TP+FP), recall = TP/(TP+FN))
-df4
+df4_
+```
+
+#### Nubes Defectuosas
+
+Hay algunas nubes que tienen una escala muy distinta a las demás que notamos la semana pasada porque daban falsos negativos en los casos de nubes completas sin ruido. Si ignoramos esas nubes en el análisis, el recall se transforma en 1  a partir de 0.3 de radio.
+
+```{r}
+nubes_malas <- c(2,8,12,29,30,38,54)
+df1_ %>% mutate(label = nube1 == nube2) %>%
+  mutate(fitness = matcheos/tamaño_nube1 ) %>%
+  filter(!(nube1 %in% nubes_malas) & !(nube2 %in% nubes_malas)) %>%
+  mutate(prediction = fitness>0.7 & rmse <0.2) %>%
+  group_by(radio) %>% 
+  summarise(
+    TP = sum(label==TRUE & prediction==TRUE),
+    TN = sum(label==FALSE & prediction==FALSE),
+    FP = sum(label==FALSE & prediction==TRUE),
+    FN = sum(label==TRUE & prediction==FALSE),
+    precission = TP/(TP+FP), recall = TP/(TP+FN))
+
+```
+
+```{r}
+ df2_malas <- df1_ %>% mutate(label = nube1 == nube2) %>%
+  mutate(fitness = matcheos/tamaño_nube1 ) %>%
+  filter((nube1 %in% nubes_malas) & (nube2 %in% nubes_malas)) 
+for (r in df2_malas$nube1 %>% unique()){
+  plot(ggplot(data = df2_malas %>% filter(nube1 == r | nube2 == r)) + geom_point(aes(x=fitness,y=rmse,col=label,alpha = 1/10)) + facet_wrap(~label) + ggtitle( paste("Nube",r)))
+} 
 ```
 

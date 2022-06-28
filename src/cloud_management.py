@@ -44,16 +44,3 @@ def add_points(pc, points_to_add):
     points = np.append(points, points_to_add, axis=0)
     return o3d.utility.Vector3dVector(points)
 
-def extract_points(pc, center, n_points, type_flag):
-    """type_flag: True return poincloud, False return np.array"""
-    pc_tree = o3d.geometry.KDTreeFlann(pc)
-    points = np.asarray(pc.points)
-    # points = np.append(points, [[0, 0, 0]], axis=0)
-    [k, idx, dist] = pc_tree.search_knn_vector_3d(center, n_points)
-    sub_cloud_points = points[idx, :]
-    if type_flag:
-        sub_cloud = copy.deepcopy(pc)
-        sub_cloud.points = o3d.utility.Vector3dVector(sub_cloud_points)
-        return sub_cloud, idx
-    else:
-        return sub_cloud_points, idx
