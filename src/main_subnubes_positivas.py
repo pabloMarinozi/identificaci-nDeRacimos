@@ -12,13 +12,13 @@ from time import time
 if __name__ == "__main__":
 
     ##### Obtenemos nubes de los racimos #######
-    bunchs_paths = "../input/grapes_paths_6.txt"
+    bunchs_paths = "../input/nubes_completas/grapes_paths_6.txt"
     f = open(bunchs_paths)
     clouds = [] # contendrá una lista de nubes
     cloud_names = [] # contendrá una lista de paths
 
     for bunch in f:
-        cloud = o3d.io.read_point_cloud("../input/"+bunch[0:-1])
+        cloud = o3d.io.read_point_cloud("../input/nubes_completas/"+bunch[0:-1])
         clouds.append(cloud)
         working_directory, video_name = os.path.split(bunch[0:-1])
         file_name_without_extension, extension = os.path.splitext(video_name)
@@ -40,27 +40,26 @@ if __name__ == "__main__":
     ############# Funciones para obtener datasets de subnubes #######
     start_time = time()
     for i, cloud in enumerate(clouds):
-        if i<15:
+        if i<32:
             continue
         print("-------------------------------------SUBNUBES DE LA NUBE",i,"--------------------------------")
         rows = []
         sub_cloud_pairs = get_bunch_dataset(cloud, n_points_min, cloud_names[i])
-        for pair in sub_cloud_pairs:
-            index1, index2, cloud1, cloud2, overlap = pair
+        n_sub_clouds_pairs = len(sub_cloud_pairs)
+        frame = np.zeros((n_sub_clouds_pairs, 10))
+        for j, pair in enumerate(sub_cloud_pairs):            index1, index2, cloud1, cloud2, overlap = pair
             for thresh in threshold_percentage_list:
                 minimun_distance = get_minimum_distance(cloud1)
-                #start = time()
                 angle = np.pi/2
                 metric = icp_from_neighbors(cloud1, cloud2, minimun_distance * thresh, n_neighbors, angle,
                                                 distances_tolerance)
-                # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
                 giros = 4
-                row = pd.DataFrame([[index1,metric[1],index2,metric[2],metric[0],overlap,metric[3],thresh,giros,i]],
-                 columns=["subnube1","tamaño_subnube1","subnube2","tamaño_subnube2","matcheos","overlap","rmse","radio","giros","nube_completa"])
-                # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
-                rows.append(row)
+                frame[j, :] = [index1,metric[1],index2,metric[2],metric[0],overlap,metric[3],thresh,giros,i]
                 print(index1, index2, metric[0],overlap)
-        data = pd.concat(rows, axis=0)
+        print(frame)
+        data = pd.DataFrame(frame,
+                           columns=["subnube1", "tamaño_subnube1", "subnube2", "tamaño_subnube2", "matcheos", "overlap",
+                                    "rmse", "radio", "giros", "nube_completa"])
         path = "../output/subnubes_sin_ruido_nube"+str(i)+".csv"
         data.to_csv(path)
     end_time = time()
