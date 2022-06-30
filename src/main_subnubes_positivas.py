@@ -40,8 +40,8 @@ if __name__ == "__main__":
     ############# Funciones para obtener datasets de subnubes #######
     start_time = time()
     for i, cloud in enumerate(clouds):
-        if i<32:
-            continue
+        # if i!=14:
+        #     continue
         print("-------------------------------------SUBNUBES DE LA NUBE",i,"--------------------------------")
 
         sub_cloud_pairs = get_bunch_dataset(cloud, n_points_min, cloud_names[i])
