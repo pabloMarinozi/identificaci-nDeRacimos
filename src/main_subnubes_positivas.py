@@ -43,11 +43,13 @@ if __name__ == "__main__":
         if i<32:
             continue
         print("-------------------------------------SUBNUBES DE LA NUBE",i,"--------------------------------")
-        rows = []
+
         sub_cloud_pairs = get_bunch_dataset(cloud, n_points_min, cloud_names[i])
         n_sub_clouds_pairs = len(sub_cloud_pairs)
-        frame = np.zeros((n_sub_clouds_pairs, 10))
-        for j, pair in enumerate(sub_cloud_pairs):            index1, index2, cloud1, cloud2, overlap = pair
+        frame = np.zeros((n_sub_clouds_pairs*len(threshold_percentage_list), 10))
+        j = 0
+        for pair in sub_cloud_pairs:
+            index1, index2, cloud1, cloud2, overlap = pair
             for thresh in threshold_percentage_list:
                 minimun_distance = get_minimum_distance(cloud1)
                 angle = np.pi/2
@@ -56,7 +58,8 @@ if __name__ == "__main__":
                 giros = 4
                 frame[j, :] = [index1,metric[1],index2,metric[2],metric[0],overlap,metric[3],thresh,giros,i]
                 print(index1, index2, metric[0],overlap)
-        print(frame)
+                j += 1
+        print(frame, frame.shape, j)
         data = pd.DataFrame(frame,
                            columns=["subnube1", "tamaño_subnube1", "subnube2", "tamaño_subnube2", "matcheos", "overlap",
                                     "rmse", "radio", "giros", "nube_completa"])
