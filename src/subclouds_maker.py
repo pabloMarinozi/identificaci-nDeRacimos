@@ -55,7 +55,10 @@ def check_ids_repetition_final(pc_data_set, ids_lista):
                 idxs_to_remove.append(j)
     idxs_to_remove = np.unique(idxs_to_remove)
     # print(idxs_to_remove)
-    return np.delete(ids_lista, idxs_to_remove, 0), np.delete(pc_data_set, idxs_to_remove, 2)
+    if idxs_to_remove.size == 0:
+        return ids_lista, pc_data_set
+    else:
+        return np.delete(ids_lista, idxs_to_remove, 0), np.delete(pc_data_set, idxs_to_remove, 2)
 
 
 def extract_points_variation(pc, center, n_points, type_flag):
@@ -93,7 +96,7 @@ def get_sub_cloud_dataset(pc, n_points):
     # print(points_clouds.shape)
     return points_clouds, ids_list
 
-def get_bunch_dataset(cloud, overlap_min, name):
+def get_bunch_dataset(cloud, overlap_min, name, save=False):
     n_points = len(np.asarray(cloud.points))
     clouds = []
     ids_tuple= ()
@@ -107,11 +110,12 @@ def get_bunch_dataset(cloud, overlap_min, name):
     sub_cloud_pairs =[]
     n_clouds = len(clouds)
     for i in range(n_clouds):
-        try: 
-            os.mkdir(name)
-        except OSError as exc:
-            pass
-        o3d.io.write_point_cloud(name+"/"+str(i)+".ply",clouds[i],write_ascii=True)
+        if save:
+            try:
+                os.mkdir(name)
+            except OSError as exc:
+                pass
+            o3d.io.write_point_cloud(name+"/"+str(i)+".ply",clouds[i],write_ascii=True)
         for j in range(i,n_clouds):
             overlap = get_overlap(ids_tuple[i], ids_tuple[j])
             sub_cloud_tuple = (i,j,clouds[i], clouds[j], overlap)
