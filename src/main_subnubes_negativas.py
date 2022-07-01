@@ -8,60 +8,62 @@ import open3d as o3d
 import numpy as np
 import pandas as pd
 from time import time
+import glob
 
 if __name__ == "__main__":
-
-    ##### Obtenemos nubes de los racimos #######
-    bunchs_paths = "../input/grapes_paths_6.txt"
-    f = open(bunchs_paths)
-    clouds = [] # contendrá una lista de nubes
+    path = "../input/subnubes"
+    pattern = "*.ply"
+    output_path = '../output/salidasICP/subnubes_negativas_sin_ruido'
+    folders = os.listdir(path)
+    n_folders = len(folders)
     cloud_names = [] # contendrá una lista de paths
-
-    for bunch in f:
-        cloud = o3d.io.read_point_cloud("../input/"+bunch[0:-1])
-        clouds.append(cloud)
-        working_directory, video_name = os.path.split(bunch[0:-1])
-        file_name_without_extension, extension = os.path.splitext(video_name)
-        cloud_names.append(file_name_without_extension)
-    n_clouds = len(clouds)
-    clouds_c = copy.deepcopy(clouds)  # contiene una copia de la lista de las nubes
-                                      # uso para agregarles ruido aleatorio por separado
-
 
     ##### hiper-parámetros ####
     n_neighbors = 1             # cantidad de vecinos por cada punto de una nube con los que va a intentar alinear
     distances_tolerance = 0.2   # Solo comparará puntos que en ambas nubes estén a distancias similares ) +/- 20%
-    threshold_percentage_list = [0.1,0.2,0.3,0.4,0.5,1]  # porcentaje de la distancia mínima en la nube a usar como trheshold
-    angle_step_list = [1/2, 1/3, 1/4, 1/6]     # paso de rotación de la nube "source" alrededor del eje z
+    threshold_percentage_list = [0.1, 0.2, 0.3, 0.4, 0.5, 1]  # porcentaje de la distancia mínima en la nube a usar como trheshold
     noise_std_dev = 0.05        # Desviación estandar de la gaussiana
                                 #   quizás debería ser un porcentaje sobre la distancia mínima
     n_points_min = 5            # número mínimo de puntos para obtener sub-nubes
+    for i in range(n_folders):
+        for j in range(i+1, n_folders):
 
-    ############# Funciones para obtener datasets de subnubes #######
-    start_time = time()
-    for i, cloud in enumerate(clouds):
-        if i<5:
-            continue
-        print("-------------------------------------SUBNUBES DE LA NUBE",i,"--------------------------------")
-        rows = []
-        sub_cloud_pairs = get_bunch_dataset(cloud, n_points_min, cloud_names[i])
-        for pair in sub_cloud_pairs:
-            index1, index2, cloud1, cloud2, overlap = pair
-            for thresh in threshold_percentage_list:
-                minimun_distance = get_minimum_distance(cloud1)
-                #start = time()
-                angle = np.pi/2
-                metric = icp_from_neighbors(cloud1, cloud2, minimun_distance * thresh, n_neighbors, angle,
-                                                distances_tolerance)
-                # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
-                giros = 4
-                row = pd.DataFrame([[index1,metric[1],index2,metric[2],metric[0],overlap,metric[3],thresh,giros,i]],
-                 columns=["subnube1","tamaño_subnube1","subnube2","tamaño_subnube2","matcheos","overlap","rmse","radio","giros","nube_completa"])
-                # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
-                rows.append(row)
-                print(index1, index2, metric[0],overlap)
-        data = pd.concat(rows, axis=0)
-        path = "../output/subnubes_sin_ruido_nube"+str(i)+".csv"
-        data.to_csv(path)
-    end_time = time()
-    print(end_time - start_time)
+            if i == j:
+                continue
+
+            print(f"----------- Folder {i} vs. Folder {j} ---------")
+            folder_1 = path + '/' + folders[i]
+            folder_2 = path + '/' + folders[j]
+            clouds_1 = glob.glob(folder_1 + '/' + pattern)
+            clouds_2 = glob.glob(folder_2 + '/' + pattern)
+            n_clouds_1 = len(clouds_1)
+            n_clouds_2 = len(clouds_2)
+            frame = np.zeros([n_clouds_1 * n_clouds_2 * len(threshold_percentage_list), 8])
+            frame_count = 0
+            for k, cloud_1_path in enumerate(clouds_1):
+                for l, cloud_2_path in enumerate(clouds_2):
+                    for thresh in threshold_percentage_list:
+                        cloud_1 = o3d.io.read_point_cloud(cloud_1_path)
+                        cloud_2 = o3d.io.read_point_cloud(cloud_2_path)
+                        minimun_distance = get_minimum_distance(cloud_1)
+                        metric = icp_from_neighbors(cloud_1, cloud_2, minimun_distance * thresh, n_neighbors, np.pi/2,
+                                                     distances_tolerance)
+                        frame[frame_count, :] = [k, metric[1], l, metric[2], metric[0], metric[3], thresh, 4]
+                        frame_count += 1
+                        # print(metric[0:-1])
+                        # print(i)
+
+            frame = pd.DataFrame(frame,
+                                 columns=["subnube1", "tamaño_subnube1", "subnube2", "tamaño_subnube2", "matcheos", "rmse", "radio", "giros"])
+            frame = frame.astype({'subnube1': int, 'tamaño_subnube1': int, 'subnube2': int, 'tamaño_subnube2': int, 'matcheos': int, "giros": int})
+
+
+            frame.to_csv(f'{output_path}/{folders[i]}_{folders[j]}.csv')
+
+
+
+
+
+
+
+
