@@ -4,7 +4,18 @@ import open3d as o3d
 import numpy as np
 
 def get_neighbors_generator(pc, n_neighbors):
-    """type_flag: True return poincloud, False return np.array"""
+    """
+    for each iteration return a tuple with 2 elements, 1. each point of a the point cloud
+    2. the n_neighbors of the given point in 1.
+    inputs:
+        pc: PointCloud object (open3d)
+        n_neighbors: int, number of neighbors to find per point
+    return:
+        tuple:
+            - numpy array with shape (1, 3),are the coordinates of the reference point
+            - numpy matrix with shape (n_neighbors, 3), are the coordinates of the
+              n_neighbors points
+    """
     pc_tree = o3d.geometry.KDTreeFlann(pc)
     points = np.asarray(pc.points)
     # points = np.append(points, [[0, 0, 0]], axis=0)
@@ -14,6 +25,15 @@ def get_neighbors_generator(pc, n_neighbors):
 
 
 def compare_distances(dist1, dist2, tolerance):
+    """
+    return True if dist2 is inside the range of [dist1*tolerance, dis1*(1-tolerance)]
+    inputs:
+        dist1: float
+        dist2: float
+        tolerance: float, number reprecenting the tolerance of the distance.
+                   must be lower of 1
+    return: bool, True, if dist2 is inside the tolerance interval
+    """
     lower_end = dist1 * (1 - tolerance)
     top_end = dist1 * (1 + tolerance)
     if lower_end < dist2 < top_end:
@@ -23,6 +43,16 @@ def compare_distances(dist1, dist2, tolerance):
 
 
 def get_RT_in_z_direction(point, neighbor, dist):
+    """
+    Compute the rotation and the translation to align a pair of points over the z axis
+    inputs:
+        point: numpy float array with shape (1, 3) first point of the pair
+        neighbor: numpy float array with shape (1, 3), second point of the pair
+        dist: distance between the points
+    output:
+        R: numpy float matrix, rotation matrix
+        centroid_B: numpy float array, translation
+    """
     A = np.asarray([[0., 0., 0.], [0., 0., dist]])
     B = np.asarray([point, neighbor])
     centroid_A = np.mean(A, axis=0)
@@ -37,10 +67,22 @@ def get_RT_in_z_direction(point, neighbor, dist):
 
 
 def icp_search_arround_z(source, target, neighbors_distance=0.8, step=np.pi / 10):
+    """
+    compute ipc algorithm for different rotations of the source cloud around the z axis.
+    inputs:
+        source: PointCloud object (open3d), point cloud that rotates around the z axis
+        target: PointCloud object (open3d), point cloud that remains fixed
+        neighbors_distance: float, radius that define the area in which each point of the
+                            source point cloud can find the closest point of the target
+                            point cloud
+        step: float, angle step rotation over the z axis
+    return:
+        best_icp: RegistrationResult object (open3d), is the best ipc result obtained
+                  according to the maximun fitness criteria
+    """
     steps_number = int(2 * np.pi // step)
     highest_icp_fitness = 0
     best_icp = None
-    R = 0
     for z in range(steps_number):
         source_cp = copy.deepcopy(source)
         coords = (0, 0, z * step)
@@ -64,18 +106,50 @@ def icp_search_arround_z(source, target, neighbors_distance=0.8, step=np.pi / 10
             if fitness > highest_icp_fitness:
                 highest_icp_fitness = fitness
                 best_icp = icp
-                R = R_aux
     return best_icp
 
 
 def custom_roto_translate(pc, rot, translate):
+    """
+    Roto translate a point cloud
+    inputs:
+        pc: PointCloud object (open3d), point cloud to roto translate
+        rot: numpy float matrix, rotation matrix
+        translate: numpy float array, translation vector
+    """
     points = np.asarray(pc.points)
     points = points - translate
     points = np.dot(points, rot)
     pc.points = o3d.utility.Vector3dVector(points)
 
 def icp_from_neighbors(source, target, threshold, n_neighbors, angle_step, distances_tolerance):
-    """devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)"""
+    """
+    Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
+    result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his nearest neighbor
+    from the target point cloud. Once each alignment is done, icp is compute for different rotations around the
+    alignment axis. The number of alignments is give by the 2*pi / angle_step.
+    inputs:
+        source: PointCloud object (open3d), point cloud to be compare with target point cloud
+        target: PointCloud object (open3d), point cloud to be compare with source point cloud
+        threshold: float, radius that define the area in which each point of the
+                   source point cloud can find the closest point of the target point cloud
+        n_neighbors: int, number of neighbors for each point of each cloud, in which the alignment will be carried out
+        angle_step: float, the angle unit that the source point cloud will be rotated over the aligned axis as a
+        different initializations to aplly icp for each pairwise alignment.
+        distances_tolerance: float, tolerance. If the distance between a pair of the target cloud doesn't match inside
+                             the range [dist pair source * tolerance, dist pair source * (1-tolerance)], the alignment
+                             is not carried out and icp is not calculated for that pair of pairs.
+    return:
+        tuple that contains:
+            - int,  number of matching points
+            - n_points_source: int, source's number of points
+            - n_points_target: int, target' number of points
+            - rmse: float, root mean square error
+            - numpy matrix with shape (n, 2), Is the correspondence set. n is the number of matching points, each row
+             correspond with a match pair, first number correspond with an index of the source cloud and the second
+             number is the index of the target point. 
+    """
+
     highest_fitness = 0
     best_icp = None
     n_points_source = len(np.asarray(source.points))
