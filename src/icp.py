@@ -2,7 +2,23 @@ import numpy as np
 import open3d as o3d
 import copy
 
-def icp_search(source, target, neighbors_distance, step=np.pi / 3, presicion_target=0.0001):
+def icp_search(source, target, neighbors_distance, step=np.pi / 3):
+    """
+    Apply the icp algorithm between two PointClouds trying from different initializations.
+    The different initializations are rotations given by "step" and its muliples, in x, y and z coordinates,
+    trying all the possible combinations of rotations.
+    inputs:
+        source: PointCloud object (open3d). is the cloud that going to be rotated
+        target: PoinCloud object (open3d). is the cloud used as reference (fix)
+        neighbors_distance: float, is the distance used for closest point distance in icp algorithm
+                            (max_correspondence_distance)
+        step: unit of angle for the rotations of the source point cloud in x, y, z
+    return:
+        best_icp: RegistrationResult object (open3d), is the best metric obtained
+        R: numpy float matrix, initial rotation that produced best_icp based on lowest rmse with fitness > 0,7
+        itn: int, numbers of different initializations (iterations)
+    """
+
     # source.translate((0, 0, 0), relative=False)
     # target.translate((0, 0, 0), relative=False)
     # o3d.visualization.draw_geometries([cloud, rt_cloud])
@@ -26,7 +42,5 @@ def icp_search(source, target, neighbors_distance, step=np.pi / 3, presicion_tar
                     lowest_icp_rmse = e
                     best_icp = icp
                     R = R_aux
-                # if e < presicion_target:
-                #     # o3d.visualization.draw_geometries([target, source_cp.transform(icp.transformation)])
-                #     return best_icp, R, itn
+
     return best_icp, R, itn
