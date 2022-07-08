@@ -3,18 +3,49 @@ import numpy as np
 import open3d as o3d
 import random2
 import os
-import jv.folders as jvf
-cfg = {
-    "INPUT_PATH": "/mnt/datos/datasets/grapes_centers/",
-}
+from glob import glob
 
-# def baya_generator(x,y,z,r,n):
-#     puntos_baya = []
-#     for i in range(n):
-#           random2.randint()
-#         x_2 =
+def make_dir(path, name):
+    """
+    check if exist a "name" directory inside the "path". If doesn't, it created
+    inputs:
+        path: string containing the path to create the directory
+        name: string containing the name of the directory
+    return:
+        string containing the directory path
+    """
+    new_dir_name = path + '/' + name
+    if not os.path.isdir(new_dir_name):
+        os.mkdir(new_dir_name)
+    return new_dir_name
 
-def cloud_generator(input_path, output_path):
+
+def get_file_paths_list(path_to_search, pattern="*.mp4"):
+    """
+    return a list of paths to all the files with extension given by the "pattern" inside the "path_to_search"
+    inputs:
+        path_to_search: string containing the path to the directory in which to search for the pattern
+        pattern: a string containing the extension of the files being searched for
+    """
+    files = []
+    for dir, _, _ in os.walk(path_to_search):
+        print(glob(os.path.join(dir, pattern)))
+        files.extend(glob(os.path.join(dir, pattern)))
+    l = len(files)
+    if l == 0:
+        raise Exception(f"El directorio {path_to_search} no existe o no contiene archivos {pattern}")
+    return files
+
+
+
+def ply_generator(input_path, output_path):
+    """
+    generate a ply file from a csv generated with the óptima pipeline getting the center of grapes
+    from the manual labeling of 3 points of grapes in a set of images obtained from a vide of a bunch
+    inputs:
+        input_path: srting containing the path to the csv file
+        output_file: string containing the path in which the ply is going to be saved
+    """
     df = pd.read_csv(input_path)
     bayas = df['label'] == 'baya'
     df = df[bayas]
@@ -48,10 +79,20 @@ end_header\n"""
         df_bayas.to_csv(ply_path, index=False, mode="a", header=False, sep=' ')
 
 
+
+"""
+script that generates ply files from the all csv found inside the  INPUT_PATH
+It generates a folder for each csv file, and inside that folder save all the ply files, each 
+named with the video file that generate it.
+"""
+cfg = {
+    "INPUT_PATH": "./100r",
+}
 if __name__ == "__main__":
-    file_list = jvf.get_file_paths_list(cfg.get("INPUT_PATH"), pattern="*.csv")
+
+    file_list = get_file_paths_list(cfg.get("INPUT_PATH"), pattern="*.csv")
     for file in file_list:
         working_directory, video_name = os.path.split(file)
         file_name_without_extension, extension = os.path.splitext(video_name)
-        path = jvf.make_dir(working_directory, file_name_without_extension)
-        cloud_generator(file, path)
+        path = make_dir(working_directory, file_name_without_extension)
+        ply_generator(file, path)
