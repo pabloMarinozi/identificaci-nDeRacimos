@@ -207,7 +207,7 @@ def icp_from_neighbors(source, target, threshold, n_neighbors, angle_step, dista
         return 0, n_points_source, n_points_target, np.infty, []
 
 
-def icp_from_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
+def icp_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
     """
     Is a new version of icp_from_neighbors function that unifies the criterion that allows omitting comparisons between
     clouds. The new criterion is based on the difference between the segments that define the alignment should be lower
