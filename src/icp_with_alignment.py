@@ -41,6 +41,20 @@ def compare_distances(dist1, dist2, tolerance):
     else:
         return False
 
+def compare_distances_v2(dist1, dist2, threshold):
+    """
+    return True if the absolute value of the difference of the distances is less than the threshold
+    inputs:
+        dist1: float
+        dist2: float
+        threshold: float, maximum allowed difference between dist1 and dist2
+    return: bool, True if the absolute value of the difference between dist1 and dist2 is less than the threshold
+    """
+    d = abs(dist1-dist2)
+    if d <= threshold:
+        return True
+    else:
+        return False
 
 def get_RT_in_z_direction(point, neighbor, dist):
     """
@@ -147,7 +161,7 @@ def icp_from_neighbors(source, target, threshold, n_neighbors, angle_step, dista
             - rmse: float, root mean square error
             - numpy matrix with shape (n, 2), Is the correspondence set. n is the number of matching points, each row
              correspond with a match pair, first number correspond with an index of the source cloud and the second
-             number is the index of the target point. 
+             number is the index of the target point.
     """
 
     highest_fitness = 0
@@ -162,6 +176,77 @@ def icp_from_neighbors(source, target, threshold, n_neighbors, angle_step, dista
                 for j in range(n_neighbors):
                     dist2 = np.linalg.norm(point2 - nn_points2[j])
                     if compare_distances(dist1, dist2, distances_tolerance):
+
+                        rot1_to_z, transl1_to_z = get_RT_in_z_direction(point1, nn_points1[i], dist1)
+                        rot2_to_z, transl2_to_z = get_RT_in_z_direction(point2, nn_points2[j], dist2)
+
+                        source_copy = copy.deepcopy(source)
+                        target_copy = copy.deepcopy(target)
+                        source_copy.paint_uniform_color([0, 0, 1])
+                        target_copy.paint_uniform_color([1, 0, 1])
+
+                        # point_cloud_viewer([target_copy, source_copy])
+
+                        custom_roto_translate(target_copy, rot1_to_z, transl1_to_z)
+                        custom_roto_translate(source_copy, rot2_to_z, transl2_to_z)
+
+                        # point_cloud_viewer([target_copy, source_copy])
+
+                        source_copy.paint_uniform_color([0, 0, 1])
+                        target_copy.paint_uniform_color([1, 0, 1])
+                        # o3d.visualization.draw_geometries([target_copy, source_copy])
+                        icp = icp_search_arround_z(source_copy, target_copy, threshold, angle_step)
+                        if icp is not None:
+                            if icp.fitness > highest_fitness:
+                                highest_fitness = icp.fitness
+                                best_icp = icp
+                        # o3d.visualization.draw_geometries([target_copy, source_copy])
+    if best_icp is not None:
+        return int(best_icp.fitness * n_points_source), n_points_source, n_points_target, best_icp.inlier_rmse, np.asarray(best_icp.correspondence_set)
+    else:
+        return 0, n_points_source, n_points_target, np.infty, []
+
+
+def icp_from_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
+    """
+    Is a new version of icp_from_neighbors function that unifies the criterion that allows omitting comparisons between
+    clouds. The new criterion is based on the difference between the segments that define the alignment should be lower
+    than the threshold used in ICP.
+    Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
+    result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his
+    nearest neighbor from the target point cloud. Once each alignment is done, icp is compute for different rotations
+    around the alignment axis. The number of alignments is give by the 2*pi / angle_step.
+    inputs:
+        source: PointCloud object (open3d), point cloud to be compare with target point cloud
+        target: PointCloud object (open3d), point cloud to be compare with source point cloud
+        threshold: float, radius that define the area in which each point of the
+                   source point cloud can find the closest point of the target point cloud
+        n_neighbors: int, number of neighbors for each point of each cloud, in which the alignment will be carried out
+        angle_step: float, the angle unit that the source point cloud will be rotated over the aligned axis as a
+        different initializations to aplly icp for each pairwise alignment.
+    return:
+        tuple that contains:
+            - int,  number of matching points
+            - n_points_source: int, source's number of points
+            - n_points_target: int, target' number of points
+            - rmse: float, root mean square error
+            - numpy matrix with shape (n, 2), Is the correspondence set. n is the number of matching points, each row
+             correspond with a match pair, first number correspond with an index of the source cloud and the second
+             number is the index of the target point.
+    """
+
+    highest_fitness = 0
+    best_icp = None
+    n_points_source = len(np.asarray(source.points))
+    n_points_target = len(np.asarray(target.points))
+
+    for point1, nn_points1 in get_neighbors_generator(target, n_neighbors):
+        for point2, nn_points2 in get_neighbors_generator(source, n_neighbors):
+            for i in range(n_neighbors):
+                dist1 = np.linalg.norm(point1 - nn_points1[i])
+                for j in range(n_neighbors):
+                    dist2 = np.linalg.norm(point2 - nn_points2[j])
+                    if compare_distances_v2(dist1, dist2, threshold):
 
                         rot1_to_z, transl1_to_z = get_RT_in_z_direction(point1, nn_points1[i], dist1)
                         rot2_to_z, transl2_to_z = get_RT_in_z_direction(point2, nn_points2[j], dist2)
