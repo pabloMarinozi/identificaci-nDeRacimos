@@ -1,7 +1,9 @@
+import argparse
 import pandas as pd
 import numpy as np
 import open3d as o3d
 import random2
+import sys
 import os
 from glob import glob
 
@@ -85,14 +87,28 @@ script that generates ply files from the all csv found inside the  INPUT_PATH
 It generates a folder for each csv file, and inside that folder save all the ply files, each 
 named with the video file that generate it.
 """
-cfg = {
-    "INPUT_PATH": "./100r",
-}
-if __name__ == "__main__":
 
-    file_list = get_file_paths_list(cfg.get("INPUT_PATH"), pattern="*.csv")
-    for file in file_list:
-        working_directory, video_name = os.path.split(file)
-        file_name_without_extension, extension = os.path.splitext(video_name)
-        path = make_dir(working_directory, file_name_without_extension)
-        ply_generator(file, path)
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+        description= """Genera nubes ply a partir de la info 3D del csv
+        -INPUT:
+            --input_csv: path to input csv
+        -OUTPUT:
+            --output_dir: Carpeta de salida, se almacenan los .ply de las nubes del csv
+        """
+    )
+    parser.add_argument('-i','--input_csv', type=str, required=True)
+    parser.add_argument('-o','--output_dir', type=str, required=True)
+    args = parser.parse_args(args)
+    file = args.input_csv
+    working_directory, video_name = os.path.split(file)
+    file_name_without_extension, extension = os.path.splitext(video_name)
+    path = make_dir(args.output_dir, file_name_without_extension)
+    ply_generator(file, path)
+
+if __name__ == "__main__":
+    main()
+        

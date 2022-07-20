@@ -1,0 +1,213 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+# 1. Lectura de datos
+```{r}
+library(tidyverse)
+setwd("~/DHARMA/identificaciónDeRacimos/output/salidasICP/subnubes_sin_ruido")
+df1 = read_csv("subnubes_sin_ruido_nube0.csv")
+for(i in 1:61){
+  path = paste0("subnubes_sin_ruido_nube",i,".csv")
+  df1 = bind_rows(df1,read_csv(path))
+}
+df_sub <- df1 %>%  unique()
+
+
+```
+
+```{r}
+setwd("~/DHARMA/identificaciónDeRacimos/output/salidasICP/nubes_completas_con_ruido")
+df_completas_cabernet = bind_rows(read_csv("nubes_completas_conruido0.1.csv"),
+                read_csv("nubes_completas_conruido0.2.csv"),
+                read_csv("nubes_completas_conruido0.3.csv"),
+                read_csv("nubes_completas_conruido0.4.csv"),
+                read_csv("nubes_completas_conruido0.5.csv"),
+                read_csv("nubes_completas_conruido1.csv")) %>% unique() %>% 
+                mutate(nube1=paste("cabernet",nube1,sep = "-")) %>% 
+                mutate(nube2=paste("cabernet",nube2,sep = "-"))
+
+nubes_malas_cabernet <- paste("cabernet",c(2,8,12,29,30,38,54),sep = "-")
+
+nubes_buenas_cabernet <- 
+  (df_completas_cabernet %>% 
+     select(nube1) %>% unique() %>% 
+     filter(!(nube1 %in% nubes_malas_cabernet))
+   )$nube1
+```
+
+```{r}
+setwd("~/DHARMA/identificaciónDeRacimos/output/salidasICP/nubes_nuevas_completas_con_ruido/")
+df_completas_bonarda = bind_rows(read_csv("nubes_nuevas_completas_conruido0.1.csv"),
+                read_csv("nubes_nuevas_completas_conruido0.2.csv"),
+                read_csv("nubes_nuevas_completas_conruido0.3.csv"),
+                read_csv("nubes_nuevas_completas_conruido0.4.csv"),
+                read_csv("nubes_nuevas_completas_conruido0.5.csv")) %>% unique() %>% 
+                mutate(nube1=paste("bonarda",nube1,sep = "-")) %>% 
+                mutate(nube2=paste("bonarda",nube2,sep = "-"))
+df_completas_bonarda$...1 <- 0:(nrow(df_completas_bonarda)-1)
+
+df_buenas_bonarda <- read_csv("nubes_buenas_bonarda.csv")
+df_buenas_bonarda$index <- paste("bonarda",df_buenas_bonarda$index,sep = "-")
+nubes_buenas_bonarda <- df_buenas_bonarda$index
+```
+
+```{r}
+setwd("~/DHARMA/identificaciónDeRacimos/output/salidasICP/nuevas_vs_viejas_completas_con_ruido/")
+df_completas_bonarda_vs_cabernet = bind_rows(read_csv("nuevas_vs_viejas_con_ruido0.1.csv"),
+                read_csv("nuevas_vs_viejas_con_ruido0.2.csv"),
+                read_csv("nuevas_vs_viejas_con_ruido0.3.csv"),
+                read_csv("nuevas_vs_viejas_con_ruido0.4.csv"),
+                read_csv("nuevas_vs_viejas_con_ruido0.5.csv"),
+                read_csv("nuevas_vs_viejas_con_ruido1.csv")) %>% unique() %>% 
+                mutate(nube1=paste("bonarda",nube1,sep = "-")) %>% 
+                mutate(nube2=paste("cabernet",nube2,sep = "-"))
+
+```
+
+
+```{r}
+df_completas <- bind_rows(df_completas_bonarda,
+                          df_completas_bonarda_vs_cabernet,
+                          df_completas_cabernet)
+
+
+nubes_buenas <- c(nubes_buenas_bonarda,nubes_buenas_cabernet)
+
+df_completas_buenas <- df_completas %>%
+  filter(nube1 %in% nubes_buenas & nube2 %in% nubes_buenas)
+df_bonarda_buenas <- df_completas_bonarda %>%
+  filter(nube1 %in% nubes_buenas & nube2 %in% nubes_buenas)
+
+max_bayas <- df_completas_buenas %>% drop_na() %>%  select(tamaño_nube1) %>% unique() %>% max()
+```
+
+2. Cálculo de F1 meassure
+
+```{r}
+getf1_data <- function(m, data){
+  data %>%
+        mutate(label = nube1 == nube2) %>%
+        #filter(tamaño_nube1>m & tamaño_nube2>m) %>% 
+        mutate(fitness = matcheos/tamaño_nube1) %>% 
+        mutate(prediction = matcheos>m) %>%
+        group_by(radio) %>% summarise(
+        TP = sum(label==TRUE & prediction==TRUE),
+        TN = sum(label==FALSE & prediction==FALSE),
+        FP = sum(label==FALSE & prediction==TRUE),
+        FN = sum(label==TRUE & prediction==FALSE),
+        precission = TP/(TP+FP), recall = TP/(TP+FN),
+        F1 = 2*(precission*recall)/(precission+recall)) %>% 
+        mutate(m=m) 
+} 
+
+getf1_data_filter <- function(m, data){
+  data %>%
+        mutate(label = nube1 == nube2) %>%
+        filter(tamaño_nube1>m & tamaño_nube2>m) %>% 
+        mutate(fitness = matcheos/tamaño_nube1) %>% 
+        mutate(prediction = matcheos>m) %>%
+        group_by(radio) %>% summarise(
+        TP = sum(label==TRUE & prediction==TRUE),
+        TN = sum(label==FALSE & prediction==FALSE),
+        FP = sum(label==FALSE & prediction==TRUE),
+        FN = sum(label==TRUE & prediction==FALSE),
+        precission = TP/(TP+FP), recall = TP/(TP+FN),
+        F1 = 2*(precission*recall)/(precission+recall)) %>% 
+        mutate(m=m) 
+} 
+
+f1_data_buenas <- 3:max_bayas %>% 
+  map(getf1_data,df_bonarda_buenas) %>% 
+  bind_rows() 
+
+f1_data_buenas_filtradas <- 3:max_bayas %>% 
+  map(getf1_data_filter,df_bonarda_buenas) %>% 
+  bind_rows() 
+```
+
+```{r}
+ggplot(f1_data_buenas) + 
+  geom_line(aes(x = m, y = F1)) +
+  facet_wrap(~radio) +
+  #xlim(3,15) +
+  xlab("matcheos")
+
+ggplot(f1_data_buenas_filtradas) + 
+  geom_line(aes(x = m, y = F1)) +
+  facet_wrap(~radio) +
+  #xlim(3,15) +
+  xlab("matcheos")
+```
+
+
+
+```{r}
+df_completas_buenas %>%
+  mutate(label = nube1 == nube2, prediction = matcheos>6) %>%
+  filter(label!=prediction & radio==0.2 )
+```
+
+
+```{r}
+list_dfs <- list()
+list_samples <- list()
+for(n in c(4,8,16,32,55)){
+  print(n)
+  for (i in 1:20){
+    samp<-sample(nubes_buenas,n,replace = TRUE)
+    list_samples <- c(list_samples,list(samp))
+    for (m in 1:max_bayas){
+     df_temp <- df_completas %>% 
+        filter(nube1 %in% samp & nube2 %in% samp) %>%
+        mutate(label = nube1 == nube2) %>%
+        mutate(fitness = matcheos/tamaño_nube1) %>% 
+        mutate(prediction = matcheos>m) %>%
+        group_by(radio) %>% summarise(
+        TP = sum(label==TRUE & prediction==TRUE),
+        TN = sum(label==FALSE & prediction==FALSE),
+        FP = sum(label==FALSE & prediction==TRUE),
+        FN = sum(label==TRUE & prediction==FALSE),
+        precission = TP/(TP+FP), recall = TP/(TP+FN),
+        F1 = 2*(precission*recall)/(precission+recall)) %>% 
+        mutate(m=m) %>% mutate(n=n)
+     list_dfs <- c(list_dfs,list(df_temp))
+    }
+  }
+}
+data <- bind_rows(list_dfs)
+data[is.na(data)] <- 0
+```
+
+```{r}
+df_hist <- df_completas_bonarda %>% mutate(label = nube1 == nube2) %>% 
+filter(label==FALSE) %>% filter(!(nube1 %in% nubes_malas))
+```
+
+```{r}
+ggplot(data = df_hist %>% 
+filter(radio==0.3)) + geom_histogram(aes(matcheos))
+```
+
+
+```{r}
+ggplot(data = df_hist) + geom_histogram(aes(matcheos)) + facet_wrap(~radio)
+```
+```{r}
+ggplot(data = df_completas %>%
+         mutate(label = nube1 == nube2, error=abs(tamaño_nube1-matcheos)) %>%
+         filter(label==TRUE) %>% 
+         filter(!(nube1 %in% nubes_malas))) +
+geom_histogram(aes(x=matcheos,col=label)) + facet_wrap(~radio) 
+```
+
+
+```{r}
+data %>% group_by(n,m,radio) %>%
+  summarise(F1_avg = mean(F1), precission_avg = mean(precission), recall_avg= mean(recall)) %>% filter(F1_avg>0.95)
+```
+
+
