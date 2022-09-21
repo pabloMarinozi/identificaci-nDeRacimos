@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>159</id>
+      <name>100f_bonarda_mauro_F3</name>
+      <size>567</size>
+      <mode>annotation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <created>2022-07-14 14:44:14.220865+00:00</created>
+      <updated>2022-07-14 15:41:39.535934+00:00</updated>
+      <subset>default</subset>
+      <start_frame>0</start_frame>
+      <stop_frame>566</stop_frame>
+      <frame_filter></frame_filter>
+      <segments>
+        <segment>
+          <id>144</id>
+          <start>0</start>
+          <stop>566</stop>
+          <url>http://cvat.dharma.frm.utn.edu.ar/?id=144</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>maurohv</username>
+        <email></email>
+      </owner>
+      <assignee></assignee>
+      <labels>
+        <label>
+          <name>baya</name>
+          <color>#ff007c</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+            <attribute>
+              <name>id_baya</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>racimo</name>
+          <color>#66ff66</color>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>keyframe</name>
+          <color>#ffcc33</color>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>keypoint</name>
+          <color>#fafa37</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>cm_1</name>
+          <color>#3d3df5</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>cm_2</name>
+          <color>#3d3df5</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>inch_1</name>
+          <color>#3d3df5</color>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>inch_2</name>
+          <color>#3d3df5</color>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>val_cm2_1</name>
+          <color>#3df53d</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>val_cm2_2</name>
+          <color>#f59331</color>
+          <attributes>
+            <attribute>
+              <name>id</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+        <label>
+          <name>Datos</name>
+          <color>#538a7b</color>
+          <attributes>
+            <attribute>
+              <name>Cuartel</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+            <attribute>
+              <name>ID</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+            <attribute>
+              <name>Peso</name>
+              <mutable>False</mutable>
+              <input_type>number</input_type>
+              <default_value>0</default_value>
+              <values>0
+100000
+1</values>
+            </attribute>
+          </attributes>
+        </label>
+      </labels>
+    </task>
+    <dumped>2022-07-18 18:12:54.041657+00:00</dumped>
+  </meta>
+  <image id="72" name="optima/cvat/2022-02-17_Zuccardi_Piedra-Infinita_Volumetria/merge2/VID_20220217_105846_merge.png" width="2560" height="720">
+    <points label="baya" occluded="0" source="manual" points="985.30,291.20;1030.10,315.20;984.60,345.70;2314.30,302.70" z_order="0" group_id="1069">
+      <attribute name="id">16</attribute>
+      <attribute name="id_baya">0</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="630.50,300.50;606.20,257.70;656.80,254.40;2046.70,247.00" z_order="0" group_id="1053">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">17</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="768.29,344.58;795.41,381.41;827.01,354.03;2179.70,321.60" z_order="0" group_id="1083">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">18</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="750.30,274.30;751.20,219.90;798.00,235.40;2165.50,229.20" z_order="0" group_id="1050">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">19</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="547.20,300.10;526.40,269.40;549.60,245.10;1962.40,245.40" z_order="0" group_id="1058">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">20</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="2003.30,518.20" z_order="0" group_id="810">
+      <attribute name="id">40</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2176.10,276.50;786.70,331.90;747.60,291.20;798.90,274.90" z_order="0" group_id="1063">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">21</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2222.00,260.00;876.60,297.80;837.60,256.20;883.30,256.60" z_order="0" group_id="1066">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">22</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="881.80,365.20;880.10,310.90;931.80,333.80;2261.60,313.40" z_order="0" group_id="1073">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">23</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="624.50,339.10;654.20,293.00;676.70,319.30;2054.40,291.90" z_order="0" group_id="1060">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">25</attribute>
+    </points>
+    <points label="cm_1" occluded="0" source="manual" points="627.00,170.70;1973.70,165.00" z_order="0" group_id="649">
+      <attribute name="id">26</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="605.52,580.03" z_order="0" group_id="810">
+      <attribute name="id">47</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="457.46,665.94" z_order="0" group_id="809">
+      <attribute name="id">29</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="896.45,634.08" z_order="0" group_id="811">
+      <attribute name="id">24</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="986.02,533.90" z_order="0" group_id="812">
+      <attribute name="id">4</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2047.30,219.00;617.10,235.20;662.00,210.10;679.90,246.40" z_order="0" group_id="1054">
+      <attribute name="id">0</attribute>
+      <attribute name="id_baya">0</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="731.10,287.80;688.30,244.40;734.10,239.30;2119.30,242.70" z_order="0" group_id="1051">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">27</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="819.70,341.00;827.30,287.10;875.10,312.20;2224.90,291.70" z_order="0" group_id="1064">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">28</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2000.30,386.30;585.10,454.70;574.50,410.90;624.40,424.50" z_order="0" group_id="1081">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">30</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="1845.70,608.40" z_order="0" group_id="809">
+      <attribute name="id">31</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="1008.40,273.70;1050.10,278.30;1042.50,320.70;2323.10,286.70" z_order="0" group_id="1071">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">32</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="918.40,306.10;888.80,257.50;941.10,264.10;2261.60,264.20" z_order="0" group_id="1067">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">33</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="711.90,437.80;677.40,396.00;728.70,380.10;2116.60,364.20" z_order="0" group_id="1076">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">34</attribute>
+    </points>
+    <points label="val_cm2_2" occluded="0" source="manual" points="376.25,175.57;1748.50,148.90" z_order="0">
+      <attribute name="id">35</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="642.10,207.30;592.80,203.60;625.00,186.30;2008.60,199.30" z_order="0" group_id="1055">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">36</attribute>
+    </points>
+    <points label="val_cm2_1" occluded="0" source="manual" points="281.36,177.39;1655.60,142.00" z_order="0">
+      <attribute name="id">39</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="2285.30,478.60" z_order="0" group_id="812">
+      <attribute name="id">38</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="801.60,235.60;834.40,252.00;814.50,288.60;2183.70,247.70" z_order="0" group_id="1065">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">37</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="711.20,371.00;657.80,345.80;700.20,330.80;2092.50,323.30" z_order="0" group_id="1061">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">46</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2189.30,238.60;810.84,234.36;863.12,237.71;840.76,218.68" z_order="0" group_id="1082">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">45</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="960.00,384.40;1008.00,350.90;1004.30,406.60;2311.70,351.10" z_order="0" group_id="1074">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">44</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="669.40,488.50;617.80,466.00;661.70,437.10;2041.40,417.50" z_order="0" group_id="1078">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">43</attribute>
+    </points>
+    <points label="keypoint" occluded="0" source="manual" points="2238.40,559.60" z_order="0" group_id="811">
+      <attribute name="id">42</attribute>
+    </points>
+    <points label="val_cm2_2" occluded="0" source="manual" points="1808.20,153.90;439.20,174.80" z_order="0">
+      <attribute name="id">41</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="691.50,310.10;661.00,265.00;686.00,249.90;2082.30,258.90" z_order="0" group_id="1052">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">1</attribute>
+    </points>
+    <points label="val_cm2_1" occluded="0" source="manual" points="1717.40,146.10;345.02,176.34" z_order="0">
+      <attribute name="id">2</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="863.70,242.70;891.50,209.20;923.50,227.20;2235.80,234.50" z_order="0" group_id="1072">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">3</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="1032.50,323.40;1053.90,352.10;1029.00,381.70;2321.30,328.90" z_order="0" group_id="1075">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">5</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="950.00,348.40;935.40,291.40;984.70,307.70;2296.30,296.80" z_order="0" group_id="1068">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">6</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="565.90,331.30;570.80,283.40;618.10,313.30;2005.00,279.70" z_order="0" group_id="1059">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">7</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="719.90,347.60;699.90,310.70;744.20,293.30;2129.10,291.80" z_order="0" group_id="1062">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">8</attribute>
+    </points>
+    <points label="cm_2" occluded="0" source="manual" points="2025.40,168.80;690.00,169.40" z_order="0" group_id="650">
+      <attribute name="id">9</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="1978.10,202.60;549.40,236.60;560.70,198.10;597.80,213.90" z_order="0" group_id="1056">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">10</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2002.80,226.10;598.10,274.20;555.20,234.00;603.30,228.50" z_order="0" group_id="1057">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">11</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="934.80,255.00;981.00,293.30;970.40,258.70;2281.70,271.90" z_order="0" group_id="1070">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">12</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2043.60,336.50;616.90,395.60;628.20,345.50;665.50,380.10" z_order="0" group_id="1079">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">13</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="588.10,392.10;564.40,345.40;608.70,339.70;1997.20,329.90" z_order="0" group_id="1080">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">14</attribute>
+    </points>
+    <points label="baya" occluded="0" source="manual" points="2155.40,371.60;761.90,440.60;742.30,394.60;790.10,399.90" z_order="0" group_id="1077">
+      <attribute name="id_baya">0</attribute>
+      <attribute name="id">15</attribute>
+    </points>
+    <tag label="Datos" source="manual">
+      <attribute name="ID">192</attribute>
+      <attribute name="Cuartel">0</attribute>
+      <attribute name="Peso">0</attribute>
+    </tag>
+  </image>
+  </annotations>
