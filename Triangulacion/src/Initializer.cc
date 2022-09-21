@@ -89,7 +89,7 @@ bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Ma
     bool initialized = false;
     int seed = 1;
 
-	//do {
+	do {
 
 		srand(seed);
 
@@ -124,22 +124,23 @@ bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Ma
 
 		// Compute ratio of scores
 		float RH = SH/(SH+SF);
+        cout<<RH<<endl;
 
 
 
 		// Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
-		if(RH>0.40)
-			initialized = ReconstructH(vbMatchesInliersH,H,mK,R21,t21,vP3D,vbTriangulated,1.0,5);
-		else //if(pF_HF>0.6)
+		//if(RH>0.40)
+		//	initialized = ReconstructH(vbMatchesInliersH,H,mK,R21,t21,vP3D,vbTriangulated,1.0,5);
+		//else //if(pF_HF>0.6)
 			initialized = ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,1.0,5);
 
 		if(!initialized){
 
-			cout << "FALLÓ LA INICIALIZACIÓN CON LA SEMILLA "<<seed<<endl;
+			//cout << "FALLÓ LA INICIALIZACIÓN CON LA SEMILLA "<<seed<<endl;
 			seed++;
 		} else cout<<"INICIALIZACIÓN EXITOSA CON LA SEMILLA "<<seed<<endl;
 
-	//} while (!initialized);
+	} while (!initialized & seed<10);
 	
 
     return initialized;

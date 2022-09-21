@@ -3,10 +3,10 @@
 #Declaro variables
 opencvInclude=/usr/include/opencv4/
 eigen3Include=/usr/include/eigen3
-projectInclude=/mnt/Data/VariablesDeInvierno/repo/winter-variables/Triangulacion_bayas/triangulacionDeBayas/include
+projectInclude=/home/pablo/DHARMA/identificaci-nDeRacimos/Triangulacion/include
 #/home/pablo/eclipse-workspace/TrianguladoCentroBayas/include
 opencvLib=/usr/lib/x86_64-linux-gnu
-g2oLib=/mnt/Data/VariablesDeInvierno/repo/winter-variables/Triangulacion_bayas/triangulacionDeBayas/include/Thirdparty/g2o/lib
+g2oLib=/home/pablo/DHARMA/identificaci-nDeRacimos/Triangulacion/include/Thirdparty/g2o/lib
 #/home/pablo/eclipse-workspace/TrianguladoCentroBayas/include/Thirdparty/g2o/lib
 
 #Compilo los fuentes
