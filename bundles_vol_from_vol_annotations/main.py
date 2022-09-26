@@ -8,7 +8,7 @@ import sys
 from cvat_xml_parser import CVat_xml_Parser
 from output_manager import OutputManager
 from xml.dom import minidom
-
+from output_manager import Output_Strategy
 
 def main(args=None):
     if args is None:
@@ -49,7 +49,7 @@ def main(args=None):
     print(data_bundles.shape)
 
     output_dir = args.output_dir
-    output_manager = OutputManager(output_dir)
+    output_manager = Output_Strategy.get_output_manager(output_dir, point_strategy)
     df_tracks = output_manager.generate_df_tracks_csv(data_bundles)
     output_manager.generate_bundles_for_image(df_tracks)
 
@@ -57,3 +57,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+

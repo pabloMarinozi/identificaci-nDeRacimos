@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import math
 
+import numpy as np
+
+
 ## Strategy interface
 class Point_Parsing_Strategy(ABC):
     def get_centre_radius_circle_from_3points(self,pts):
@@ -150,7 +153,7 @@ class Strategy_Fecovita(Point_Parsing_Strategy):
                     list_x = [pts[0],pts[2],pts[4],pts[6]]
                     x_right = max(list_x)
                     if x_right < width_img:
-                    	print("El punto con id ",attr_id," tiene x ",x_right, " pero el ancho de la imagen es ", width_img)
+                        print("El punto con id ",attr_id," tiene x ",x_right, " pero el ancho de la imagen es ", width_img)
                     x_right_index = pts.index(x_right)
                     y_right = pts[x_right_index+1]
                     pts.remove(x_right)
@@ -331,6 +334,193 @@ class Strategy_Fecovita_Just_Right(Point_Parsing_Strategy):
         return list_of_dicts
 
 
+class Strategy_Fecovita_with_complete_flag(Point_Parsing_Strategy):
+    def __init__(self):
+        self.group_id_vals = 10000
+
+    def getDictPoint(self, name_right, name_left, label, width_img, height_img, x, y, r, group_id, complete_flag):
+        # Si x es mayor al ancho de la imagen, entonces el punto corresponde a la imagen
+        # de la derecha, sino a la imagen de la izquierda
+        side = 0
+        base_name = ""
+        if (x > width_img):
+            x = x - width_img
+            base_name = name_right
+            side = 1
+        else:
+            base_name = name_left
+
+        # Si la imagen está vertical aplica una transformación a los puntos para
+        # pasar el punto del espacio vertical al horizontal
+        if (width_img < height_img):
+            temp_x = x
+            temp_y = y
+            x = y
+            y = width_img - temp_x
+            if (x < 0):
+                print("  WARNING: coordenada negativa:")
+                print(base_name, label, temp_x, temp_y, width_img, height_img, x, y)
+
+        dict = {'base_name': base_name,
+                'label': label,
+                'x': int(x),
+                'y': int(y),
+                'r': str(r),
+                'group_id': group_id,
+                'side': side,
+                'complete': complete_flag}
+
+        return dict
+
+    def parse_points(self, id_img, points_list, width_img, height_img, base_name_left, base_name_right):
+        if (len(points_list) == 0):
+            print("  WARNING: no se encontraron etiquetas para la imagen", base_name_left)
+        list_of_dicts = []
+
+        for points in points_list:
+            label = points.attributes['label'].value
+            group_id = ""
+            if (label != "radio_baya" and
+                    label != "val_cm2_1" and label != "val_cm2_2" and
+                    label != "val_in2_1" and label != "val_in2_2"):
+                try:
+                    group_id = int(points.attributes['group_id'].value)
+                except KeyError:
+                    print("  WARNING: point sin 'group_id' en", base_name_left, ". Error manual de etiquetado:", label)
+                    continue
+            if label == "baya":
+                group_id = ""
+                try:
+                    group_id = int(points.attributes['group_id'].value)
+                except KeyError:
+                    print("  WARNING: point de tipo 'baya' sin 'group_id' en", base_name_left,
+                          "(error manual de etiquetado)")
+                    continue
+
+                # Extrae los punto de elemento 'points' con label 'baya' y calcula su centro
+                str_points = points.attributes['points'].value
+                # print(str_points)
+                pts = super().parse_str_points_to_float_list(str_points)
+                # x, y, r = get_centre_radius_circle_from_3points(pts[0:6])
+
+                x = 0
+                y = 0
+                r = 0
+                dict = {}
+
+                attrib = points.getElementsByTagName('attribute')
+
+                for yy, attrs in enumerate(attrib):
+                    if attrs.getAttribute("name") == 'id':
+                        break
+                attr_id = attrib[yy].firstChild.nodeValue
+
+
+                for xx, attrs in enumerate(attrib):
+                    if attrs.getAttribute("name") == 'Completa':
+                        break
+
+
+
+                try:
+                    complete_flag = True if attrib[xx].firstChild.nodeValue == 'true' else False
+                except KeyError:
+                    complete_flag = False
+
+                # Si se trata de una etiqueta 'points' con 3 puntos
+                if len(pts) == 6:
+                    x, y, r = super().get_centre_radius_circle_from_3points(pts)
+                    dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                                width_img, height_img, x, y, r, group_id,complete_flag)
+                    list_of_dicts.append(dict)
+
+                # Si se trata de una etiqueta 'points' con 4 puntos
+                elif len(pts) == 8:
+                    list_x = [pts[0], pts[2], pts[4], pts[6]]
+                    x_right = max(list_x)
+                    if x_right < width_img:
+                        print("El punto con id ", attr_id, " tiene x ", x_right, " pero el ancho de la imagen es ",
+                              width_img)
+                    x_right_index = pts.index(x_right)
+                    y_right = pts[x_right_index + 1]
+                    pts.remove(x_right)
+                    pts.remove(y_right)
+                    x, y, r = super().get_centre_radius_circle_from_3points(pts)
+                    dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                                width_img, height_img, x, y, r, group_id,complete_flag)
+                    list_of_dicts.append(dict)
+
+                    x = x_right
+                    y = y_right
+                    r = "NULL"
+                    dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                                width_img, height_img, x, y, r, group_id, False)
+                    list_of_dicts.append(dict)
+
+                else:
+                    print("  WARNING: etiqueta 'points' de cvat con", len(pts), "puntos")
+            elif (label == "keyframe" or label == "keypoint"):
+                # or label == "val_cm2_1" or label == "val_cm2_2"
+                # or label == "val_in2_1" or label == "val_in2_2"):
+
+                # Correcciones en los nombres de etiquetas
+                if label == "keyframe":
+                    label = "keypoint"
+
+                # Extrae los punto de elemento 'points'
+                str_points = points.attributes['points'].value
+                pts = super().parse_str_points_to_float_list(str_points)
+
+                # Si se trata de una etiqueta 'points' con más de 1 punto
+                if len(pts) > 2:
+                    print("  WARNING: etiqueta 'points' de cvat con", int(len(pts) / 2), "puntos. Se descarta", label)
+                    continue
+
+                x = pts[0]
+                y = pts[1]
+                r = "NULL"
+                dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                            width_img, height_img, x, y, r, group_id, False)
+                list_of_dicts.append(dict)
+            elif (label == "val_cm2_1" or label == "val_cm2_2"
+                  or label == "val_in2_1" or label == "val_in2_2"
+                  or label == "cm_1" or label == "cm_2"):
+
+                # Correcciones en los nombres de etiquetas
+                if label == "val_cm2_1":
+                    label = "val_1"
+                if label == "val_cm2_2":
+                    label = "val_2"
+                if label == "cm_1":
+                    label = "cal_1"
+                if label == "cm_2":
+                    label = "cal_2"
+
+                # Extrae los punto de elemento 'points'
+                str_points = points.attributes['points'].value
+                pts = super().parse_str_points_to_float_list(str_points)
+
+                # Si se trata de una etiqueta 'points' con más de 2 puntos
+                if len(pts) > 4:
+                    print("  WARNING: etiqueta 'points' de cvat con", int(len(pts) / 2), "puntos. Se descarta", label)
+                    continue
+
+                x = pts[0]
+                y = pts[1]
+                r = "NULL"
+                dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                            width_img, height_img, x, y, r, self.group_id_vals, False)
+                list_of_dicts.append(dict)
+
+                x = pts[2]
+                y = pts[3]
+                r = "NULL"
+                dict = self.getDictPoint(base_name_right, base_name_left, label,
+                                            width_img, height_img, x, y, r, self.group_id_vals, False)
+                list_of_dicts.append(dict)
+
+                self.group_id_vals = self.group_id_vals + 1
+        return list_of_dicts
 ## Strategy factory
 class Point_Parsing_Strategy_Factory:
     @staticmethod
@@ -339,3 +529,5 @@ class Point_Parsing_Strategy_Factory:
             return Strategy_Fecovita()
         if strategy_name=="fecovita_just_right":
             return Strategy_Fecovita_Just_Right()
+        if strategy_name=="fecovita_with_complete_flag":
+            return Strategy_Fecovita_with_complete_flag()
