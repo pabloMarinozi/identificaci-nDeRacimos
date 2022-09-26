@@ -4,7 +4,9 @@ import os
 
 
 # Directorio que contiene a todos los cuarteles a procesar
-input_dir = "../2022-02-17_Zuccardi_Piedra-Infinita_Volumetria/data_sources/train_1_3"
+#input_dir = "../2022-02-17_Zuccardi_Piedra-Infinita_Volumetria/data_sources/fallidas_reintento"
+input_dir = "/home/pablo/DHARMA/berry_tracking/output"
+image_dir = "/home/pablo/DHARMA/berry_tracking/output"
 # Extesión de las imágenes a procesar (sin el punto)
 ext_img = "png"
 # Calibración usada durante la reconstruccion 3D y estimación de volúmenes
@@ -25,8 +27,9 @@ if not os.path.exists(path_temp):
     # Create a new directory because it does not exist
     os.makedirs(path_temp)
 
-cmd = "python3 Debug/triangular_racimos_from_folder.py" \
+cmd = "python3 Release/triangular_racimos_from_folder.py" \
                 " -i " + input_dir + "/" + \
+                " -m " + input_dir + "/" + \
                 " -c data/" + calib_yaml + \
                 " -s " + str(calib) + \
                 " -v " + str(val_dist) + \

@@ -13,11 +13,11 @@ class Map;
 
 class InputReader {
 public:
-	InputReader(const string &strSettingPath, const string &strMatchesPaths);
+	InputReader(const string &strSettingPath, const string &strMatchesPaths, const string &strImagesPath);
 	int GetNumFrames();
 	vector<int> GetImageBounds(cv::Mat K);
 	cv::Mat GetK();
-	vector<int> GetInitialMatches();
+	vector<tuple<int,int,int> > GetInitialPairs();
 	vector<int> GetNotInitialFrames();
 	vector<int> GetMatches(int frameId1, int frameId2);
 	vector<cv::Point2f> GetPoints(int frameId);
@@ -39,6 +39,8 @@ public:
 	void setTrackVal2(int trackVal2) {track_val_2 = trackVal2;}
 	const map<int, string>& getImgNames() const {return img_names;}
 	vector<int> GetIndexInKfs(vector<int>kfs, int track);
+    void setFrame0(int f) {frame0 = f;}
+    void setFrame1(int f) {frame1 = f;}
 	int getFrame0() const {return frame0;}
 	int getFrame1() const {return frame1;}
 	const map<int, vector<float> >& getRadios() const {return radios;}
@@ -49,6 +51,7 @@ public:
 protected:
 	const string strSettingPath;
 	const string strMatchesPath;
+    const string strImagesPath;
 	int numFrames;
 	map<int, vector<cv::Point2f> > kps;
 	map<int, vector<int> > track_ids;

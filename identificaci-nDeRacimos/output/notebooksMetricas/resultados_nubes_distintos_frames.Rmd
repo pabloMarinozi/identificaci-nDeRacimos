@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 Carga los índices de cada par de frames para saber cuales corresponden a cada racimo
-```{r}
+```{r message=FALSE}
 library(readr)
 library(dplyr)
 library(purrr)
@@ -15,7 +15,7 @@ buenas13 <- read_csv("../../input/nubes_completas/bonarda/frames13/buenas.csv")$
 ```
 
 Carga la info de los frames 01 vs 03
-```{r}
+```{r message=FALSE}
 
 setwd("../salidasICP/bonarda01_vs_bonarda03_sin_ruido")
 
@@ -25,11 +25,11 @@ df_01_03 <- "bonarda01_vs_bonarda03_sin_ruido" %>%
   left_join(read_csv("nube1_names.csv")) %>%
   left_join(read_csv("nube2_names.csv")) %>% 
   filter(name1 %in% buenas01) %>% 
-  filter(name1 %in% buenas03)
+  filter(name1 %in% buenas03) %>% mutate(corrida = "01_03")
 ```
 
 Carga la info de los frames 01 vs 13
-```{r}
+```{r message=FALSE}
 setwd("../salidasICP/bonarda01_vs_bonarda13_sin_ruido")
 
 df_01_13 <- "bonarda01_vs_bonarda13_sin_ruido" %>%
@@ -38,26 +38,25 @@ df_01_13 <- "bonarda01_vs_bonarda13_sin_ruido" %>%
   left_join(read_csv("nube1_names.csv")) %>%
   left_join(read_csv("nube2_names.csv")) %>% 
   filter(name1 %in% buenas01) %>% 
-  filter(name1 %in% buenas13)
+  filter(name1 %in% buenas13) %>% mutate(corrida = "01_13")
 ```
 
 Carga la info de los frames 03 vs 13
-```{r}
+```{r message=FALSE}
 setwd("../salidasICP/bonarda03_vs_bonarda13_sin_ruido")
 
 df_03_13 <- "bonarda03_vs_bonarda13_sin_ruido" %>%
   paste0(c(0.1,0.2,0.3,0.4,0.5,1),".csv") %>% 
-  map(read_csv) %>% bind_rows() %>% unique() %>% 
-  mutate(video1 = names_csv$vid_name[match(nube1, names_buenas_csv$index03)],
-        video2 = names_csv$vid_name[match(nube2, names_buenas_csv$index13)],
-        frames="03_13") %>% 
-  drop_na() #las nubes malas tienen NA en video1 o video2 porque el csv tiene el nombre de las buenas nomás
-
+  map(read_csv) %>% bind_rows() %>% unique() %>%
+  left_join(read_csv("nube1_names.csv")) %>%
+  left_join(read_csv("nube2_names.csv")) %>% 
+  filter(name1 %in% buenas03) %>% 
+  filter(name1 %in% buenas13) %>% mutate(corrida = "03_13")
 ```
 
 Junta toda la info en un solo dataframe
 ```{r}
-df <- bind_rows(df_01_03,df_01_13) 
+df <- bind_rows(df_01_03,df_01_13,df_03_13) 
 max_bayas <- df %>% drop_na() %>%  select(tamaño_nube1) %>% unique() %>% max()
 
 ```
@@ -102,6 +101,7 @@ getf1_data_filter <- function(m, data){
 f1_df <- 3:max_bayas %>% map(getf1_data,df) %>% bind_rows()
 f1_df_01_03 <- 3:max_bayas %>% map(getf1_data,df_01_03) %>% bind_rows()
 f1_df_01_13 <- 3:max_bayas %>% map(getf1_data,df_01_13) %>% bind_rows()
+f1_df_03_13 <- 3:max_bayas %>% map(getf1_data,df_03_13) %>% bind_rows()
 f1_data_filtered <- 3:max_bayas %>% map(getf1_data_filter,df) %>% bind_rows()
 ```
 
@@ -149,6 +149,20 @@ ggplot(f1_df_01_13) +
            panel.grid.major.y = element_line( size=.1, color="black" )
     )
 
+ggplot(f1_df_03_13) + 
+  geom_line(aes(x = m, y = F1)) +
+  geom_line(aes(x = m, y = precission, col="precission")) +
+  geom_line(aes(x = m, y = recall, col ="recall")) +
+  facet_wrap(~radio) +
+  #xlim(3,15) +
+   xlab("matcheos") +
+  scale_y_continuous(breaks = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)) +
+   scale_x_continuous(limits=c(3,15),breaks = seq(0, max_bayas, by = 1)) +
+  theme(
+  panel.grid.major.x = element_line( size=.1, color="black" ),
+           panel.grid.major.y = element_line( size=.1, color="black" )
+    )
+
 ggplot(f1_data_filtered) + 
   geom_line(aes(x = m, y = F1)) +
   geom_line(aes(x = m, y = precission, col="precission")) +
@@ -160,7 +174,7 @@ ggplot(f1_data_filtered) +
 
 ```{r}
 df %>% filter(label == TRUE) %>% ggplot + geom_histogram(aes(matcheos))
-df %>% filter(label==TRUE,matcheos<6,radio<0.3) %>% count(frames)
+fallos <- df %>% mutate(label = name1 == name2) %>% filter(label==TRUE,matcheos<9,radio==0.3)
 
 dfFalse <-  df %>% filter(nube1 == 43,radio==0.2)
 

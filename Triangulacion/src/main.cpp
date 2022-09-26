@@ -31,19 +31,24 @@ using namespace ORB_SLAM2;
 int main(int argc, char **argv) {
 
 	cout << "argc: " << argc << endl;
-	if (argc != 5) {
+	if (argc != 6) {
 		cerr << endl << "Uso: \n"
 				"./TrianguladoCentroBayas\n"
 				"ruta_calibracion\n"
 				"ruta_bundles\n"
+				"ruta_imagenes\n"
 				"distancia_calibracion_en_cm\n"
 				"carpeta de salida" << endl;
 		return 1;
 	}
+	string calibPath = argv[1];
+	string bundlesPath = argv[2];
+	string imagesPath = argv[3];
+	float distancia_calibracion = atof(argv[4]);
+	string outputFolder = argv[5];
 
 	//Rellenar variables con info del archivo
-	InputReader* mpInputReader = new InputReader(argv[1], argv[2]);
-	float distancia_calibracion = atof(argv[3]);
+	InputReader* mpInputReader = new InputReader(calibPath, bundlesPath, imagesPath);
 	if (mpInputReader->error)
 		return -1;
 	cv::Mat mK = mpInputReader->GetK();
@@ -53,23 +58,40 @@ int main(int argc, char **argv) {
 		cout << "No hay suficientes frames para inicializar el mapa" << endl;
 		return 0;
 	}
-	vector<int> mvIniMatches = mpInputReader->GetInitialMatches();
-	int f0 = mpInputReader->getFrame0(), f1 = mpInputReader->getFrame1();
-	vector<cv::KeyPoint> kpsUn1 = mpInputReader->GetUndistortedKPs(f0, mK);
-	vector<cv::KeyPoint> kpsUn2 = mpInputReader->GetUndistortedKPs(f1, mK);
+
 
 	//Inicializar Mapa
 	MapManager* mpMapManager = new MapManager();
-	std::vector<cv::Point3f> mvIniP3D;
-	vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
+	Initializer* mpInitializer;
 	cv::Mat Rcw; // Current Camera Rotation
 	cv::Mat tcw; // Current Camera Translation
-	cout << "Comenzando inicialización con frames " << f0 << " y " << f1
-			<< endl;
-	Initializer* mpInitializer = new Initializer(mK, kpsUn1, kpsUn2, 1.0,
-			100000);
-	if (mpInitializer->Initialize(mvIniMatches, Rcw, tcw, mvIniP3D,
-			vbTriangulated)) {
+	std::vector<cv::Point3f> mvIniP3D;
+	vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
+	vector<cv::KeyPoint> kpsUn1,kpsUn2;
+	vector<int> mvIniMatches;
+	vector<tuple<int,int,int> > mvPairs = mpInputReader->GetInitialPairs();
+	bool initialized = false;
+	int best = 0;
+	int num, f0, f1;
+
+	while(!initialized & mvPairs.size()>best){
+		tie(num,f0,f1) = mvPairs[best];
+		//int f0 = mpInputReader->getFrame0(), f1 = mpInputReader->getFrame1();
+		kpsUn1 = mpInputReader->GetUndistortedKPs(f0, mK);
+		kpsUn2 = mpInputReader->GetUndistortedKPs(f1, mK);
+		cout << "Comenzando inicialización con frames " << f0 << " y " << f1
+				<< endl;
+		mpInitializer = new Initializer(mK, kpsUn1, kpsUn2, 1.0,
+				100000);
+		mvIniMatches = mpInputReader->GetMatches(f0,f1);
+		if (mpInitializer->Initialize(mvIniMatches, Rcw, tcw, mvIniP3D,
+				vbTriangulated))
+			initialized = true;
+		else cout << "LA RECONSTRUCCIÓN FALLÓ. Se intentará con el próximo par de frames."<<endl;
+		best++;
+	}
+
+	if(initialized){
 		// Set KeyFrame Poses
 		cv::Mat Tcw1 = cv::Mat::eye(4, 4, CV_32F);
 		cv::Mat Tcw2 = cv::Mat::eye(4, 4, CV_32F);
@@ -88,11 +110,11 @@ int main(int argc, char **argv) {
 		dto.setTcw1(Tcw1);
 		dto.setTcw2(Tcw2);
 		dto.setMvTracks(mpInputReader->GetTrackIds(f1));
-		dto.setFrame0(mpInputReader->getFrame0());
-		dto.setFrame1(mpInputReader->getFrame1());
+		dto.setFrame0(f0);
+		dto.setFrame1(f1);
 		mpMapManager->CreateInitialMapMonocular(dto);
 	} else{
-        cout << "LA RECONSTRUCCIÒN FALLÓ"<<endl;
+        cout << "LA RECONSTRUCCIÓN NO FUE POSIBLE CON NINGÚN PAR DE FRAMES"<<endl;
         return 0;
     }
 
@@ -111,7 +133,8 @@ int main(int argc, char **argv) {
 		if (scaleFactor > 0)
 			mpMapManager->ScaleMap(scaleFactor);
 		int cal_1=mpInputReader->getTrackCal1(), cal_2 =mpInputReader->getTrackCal2();
-		cout<<mpMapManager->GetDistanceCal1Cal2(cal_1,cal_2)<<endl;
+		if (cal_1>=0 & cal_2>=0)
+			cout<<mpMapManager->GetDistanceCal1Cal2(cal_1,cal_2)<<endl;
 	}
 
 	//Realizar Reproyecciones para verificar Resultados
@@ -133,6 +156,7 @@ int main(int argc, char **argv) {
 		vector<float> vols_rep;
 		vector<float> vols_real;
 		string imgname = mpInputReader->GetImageName(i);
+
 		cv::Mat img = cv::imread(imgname);
 		for (int j = 0; j < kps.size(); ++j) {
 			int track = tracks[j];
@@ -178,7 +202,7 @@ int main(int argc, char **argv) {
 	map<int, vector<cv::Point2f> > kps = mpInputReader->getKps();
 	map<int, vector<int> > track_ids = mpInputReader->getTrackIds();
 	map<int, string> img_names = mpInputReader->getImgNames();
-	string str1 = string(argv[4]); string str2 = string(argv[2]);
+	string str1 = string(outputFolder); string str2 = string(bundlesPath);
 	OutputWriter* mpOutputWriter = new OutputWriter(str1, str2);
 	mpOutputWriter->guardarImagenes(imgs, img_names);
 	map<int, string> labels = mpInputReader->getLabels();

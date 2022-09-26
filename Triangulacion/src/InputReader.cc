@@ -40,11 +40,14 @@ vector<string> getCols(string str) {
 }
 
 InputReader::InputReader(const string &strSettingPath,
-		const string &strMatchesPath) :
-		strSettingPath(strSettingPath), strMatchesPath(strMatchesPath) {
+		const string &strMatchesPath, const string &strImagesPath) :
+		strSettingPath(strSettingPath), strMatchesPath(strMatchesPath),
+		strImagesPath(strImagesPath) {
 	std::string str;
 	ifstream myfile;
 	myfile.open(strMatchesPath);
+	track_cal_1 = -1;
+	track_cal_2 = -1;
 	track_val_1 = 0;
 	track_val_2 = 0;
 	error = false;
@@ -197,7 +200,7 @@ int InputReader::GetNumFrames() {
 }
 
 string InputReader::GetImageName(int frameId) {
-	string full_path = dirnameOf(strMatchesPath) + "/" + img_names[frameId];
+	string full_path = strImagesPath + "/" + img_names[frameId];
 	return full_path;
 }
 
@@ -248,11 +251,13 @@ vector<cv::KeyPoint> InputReader::GetUndistortedKPs(int frameId, cv::Mat mK) {
 	return mvKeysUn;
 }
 
-vector<int> InputReader::GetInitialMatches() {
-	int kf1, kf2, max = 0;
+vector<tuple<int,int,int> > InputReader::GetInitialPairs() {
+	vector<tuple<int,int,int> > pairs;
+
+	//int kf1, kf2, max = 0;
 	for (int i = 0; i < numFrames; i++) {
 		for (int j = 0; j < numFrames; j++) {
-			if (i == j)
+			if (i >= j)
 				continue;
 			vector<int> matches = GetMatches(i, j);
 			int num = 0;
@@ -260,22 +265,17 @@ vector<int> InputReader::GetInitialMatches() {
 				if (matches[k] != -1)
 					num++;
 			}
-			if (num > max) {
-				kf1 = i;
-				kf2 = j;
-				max = num;
+			pairs.push_back(make_tuple(num,i,j));
 			}
-		}
-	}
-	frame0 = kf1;
-	frame1 = kf2;
-	return GetMatches(frame0, frame1);
-
+	}	
+	sort(pairs.begin(), pairs.end());
+	return pairs;	
 }
+	
 
 vector<int> InputReader::GetNotInitialFrames() {
-	if (frame0 < 0 || frame1 < 0)
-		vector<int> m = GetInitialMatches();
+	//if (frame0 < 0 || frame1 < 0)
+	//	vector<int> m = GetInitialMatches();
 	vector<int> f;
 	for (int i = 0; i < numFrames; i++) {
 		if (i != frame0 && i != frame1)

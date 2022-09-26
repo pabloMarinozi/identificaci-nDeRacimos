@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 if i != 65: continue
                 for j in range(n_old_clouds):
                     if j!= 65: continue
-                    o3d.visualization.draw_geometries([old_clouds[j].paint_uniform_color([0, 1, 0]), new_clouds[i].paint_uniform_color([1, 0, 0])])
+                    #o3d.visualization.draw_geometries([old_clouds[j].paint_uniform_color([0, 1, 0]), new_clouds[i].paint_uniform_color([1, 0, 0])])
                     source = new_clouds[i]
                     target = old_clouds[j]
                     minimun_distance = get_minimum_distance(source) # lo hice sobre source porque es la que rota sobre z
