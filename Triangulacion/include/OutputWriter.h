@@ -13,10 +13,11 @@ class Map;
 
 class OutputWriter {
 public:
-	OutputWriter(string strOutputPath, string strMatchesPath);
+	OutputWriter(string strOutputPath, string strMatchesPath, int f0, int f1);
 	const string& getStrOutputPath() const {return strOutputPath;}
-	void guardarImagenes(vector<cv::Mat> imgs, map<int, string> names);
-	void guardarResultados(int N, map<int, vector<float> > errors_map,
+	void guardarImagenes(map<int, cv::Mat> imgs, map<int, string> names);
+	void guardarResultados(vector<long unsigned int> allKfIds,
+            map<int, vector<float> > errors_map,
 			map<int, vector<cv::Point2f> > rep_map,
 			map<int, vector<cv::Point2f> > kps,
 			map<int, vector<cv::Point2f> > points_map,

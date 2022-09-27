@@ -108,6 +108,7 @@ def icp_search_arround_z(source, target, neighbors_distance=0.8, step=np.pi / 10
         # o3d.visualization.draw_geometries([target, source, mesh])
         # o3d.visualization.draw_geometries([target, source_cp, mesh])
 
+        #print(neighbors_distance)
         icp = o3d.pipelines.registration.registration_icp(source_cp, target, neighbors_distance)
         fitness_error = icp.fitness
         fitness = icp.fitness

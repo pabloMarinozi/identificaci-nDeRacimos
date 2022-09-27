@@ -124,7 +124,7 @@ bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Ma
 
 		// Compute ratio of scores
 		float RH = SH/(SH+SF);
-        cout<<RH<<endl;
+        //cout<<RH<<endl;
 
 
 

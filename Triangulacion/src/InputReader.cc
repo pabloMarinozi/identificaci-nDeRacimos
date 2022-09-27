@@ -251,13 +251,14 @@ vector<cv::KeyPoint> InputReader::GetUndistortedKPs(int frameId, cv::Mat mK) {
 	return mvKeysUn;
 }
 
-vector<tuple<int,int,int> > InputReader::GetInitialPairs() {
+vector<tuple<int,int,int> > InputReader::GetInitialPairsFromMostMatches() {
 	vector<tuple<int,int,int> > pairs;
+	float dist = numFrames/4;
 
 	//int kf1, kf2, max = 0;
 	for (int i = 0; i < numFrames; i++) {
 		for (int j = 0; j < numFrames; j++) {
-			if (i >= j)
+			if (i >= j | abs(i-j) < dist)
 				continue;
 			vector<int> matches = GetMatches(i, j);
 			int num = 0;
@@ -269,6 +270,20 @@ vector<tuple<int,int,int> > InputReader::GetInitialPairs() {
 			}
 	}	
 	sort(pairs.begin(), pairs.end());
+	return pairs;	
+}
+
+vector<tuple<int,int,int> > InputReader::GetInitialPairsFromQuartiles() {
+	vector<tuple<int,int,int> > pairs;
+	int q = numFrames/4;
+	int q1 = q;
+	int q3 = 3*q;
+	int index = 0; 
+
+	while(q1!=q3){
+		pairs.push_back(make_tuple(index,q1,q3));
+		index++; q1++; q3--;
+	}
 	return pairs;	
 }
 	

@@ -20,8 +20,9 @@
 
 using namespace std;
 
-OutputWriter::OutputWriter(string strOutputPath, string strMatchesPath){
-	string directory;
+OutputWriter::OutputWriter(string strOutputPath, string strMatchesPath,int f0, int f1 ){
+	string directory = "/"+to_string(f0)+"_"+to_string(f1);
+	/*
 	const size_t last_slash_idx = strMatchesPath.find_last_of('/');
 	if (std::string::npos != last_slash_idx)
 	{
@@ -29,6 +30,8 @@ OutputWriter::OutputWriter(string strOutputPath, string strMatchesPath){
 	}
 	const size_t last_slash_idx2 = directory.find_last_of('/');
 	directory = directory.substr(last_slash_idx2);
+	cout<<"directory: "<< directory<<endl;
+	directory = directory+to_string(f0)+"_"+to_string(f1);*/
 
 
 	//char* ruta = "";
@@ -62,17 +65,17 @@ OutputWriter::OutputWriter(string strOutputPath, string strMatchesPath){
 	this->strOutputPath = strOutputPath;
 }
 
-void OutputWriter::guardarImagenes(vector<cv::Mat> imgs, map<int, string> names){
-	for (int i = 0; i < imgs.size(); ++i) {
+void OutputWriter::guardarImagenes(map<int, cv::Mat> imgs, map<int, string> names){
+	for (auto const& [key, val] : imgs){
 		char* nombre;
-		cv::Mat img = imgs[i];
-		sprintf(nombre, "%s/%s", strOutputPath, names[i]);
-		const string ruta = strOutputPath+"/"+to_string(i)+".png";
+		cv::Mat img = val;
+		sprintf(nombre, "%s/%s", strOutputPath, names[key]);
+		const string ruta = strOutputPath+"/"+to_string(key)+".png";
 		cv::imwrite(ruta,img);
 	}
 }
 
-void OutputWriter::guardarResultados(int N,
+void OutputWriter::guardarResultados(vector<long unsigned int> allKfIds,
 		map<int, vector<float> > errors_map,
 		map<int, vector<cv::Point2f> > rep_map,
 		map<int, vector<cv::Point2f> > kps_map,
@@ -121,7 +124,7 @@ void OutputWriter::guardarResultados(int N,
 			cv::Point3d p = iter->second;
 
 			//columnas por frame
-			for (int frame_index = 0; frame_index < N; ++frame_index){
+			for (auto frame_index : allKfIds){
 
 				myfile << track_id <<","<< frame_index <<","<< labels[track_id];
 

@@ -241,9 +241,11 @@ void MapManager::CreateNewKeyFrame(int id, InputReader* mpInputReader) {
 }
 
 vector<cv::Point2f> MapManager::ReproyectAllMapPointsOnKeyFrame(int id) {
+	vector<cv::Point2f> rep;
 	vector<KeyFrame*> allKFs = mpMap->GetAllKeyFrames();
 	cout<<"Reproyectando MapPoints sobre el Keyframe "<<id<<endl;
 	KeyFrame* kf = BuscarKF(id, allKFs);
+	if(!kf) return rep;
 	Converter* converter = new Converter();
 	return converter->ReprojectAllMapPointsOnKeyFrame(kf);
 }
@@ -260,6 +262,17 @@ map<int, cv::Point3d> MapManager::GetAllMapPoints() {
 				pos.at<float>(2));
 	}
 	return mps;
+}
+
+
+vector<long unsigned int> MapManager::GetAllKeyFramesId() {
+	vector<long unsigned int> ids;
+	vector<KeyFrame*> allKFs = mpMap->GetAllKeyFrames();
+	vector<KeyFrame*>::iterator kf;
+	for (kf = allKFs.begin(); kf != allKFs.end(); ++kf) {
+		ids.push_back((*kf)->mnId);
+	}
+	return ids;
 }
 
 float distanciaPuntoPunto(cv::Mat punto1, cv::Mat punto2) {

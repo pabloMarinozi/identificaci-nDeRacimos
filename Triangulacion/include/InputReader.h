@@ -17,7 +17,8 @@ public:
 	int GetNumFrames();
 	vector<int> GetImageBounds(cv::Mat K);
 	cv::Mat GetK();
-	vector<tuple<int,int,int> > GetInitialPairs();
+	vector<tuple<int,int,int> > GetInitialPairsFromMostMatches();
+    vector<tuple<int,int,int> > GetInitialPairsFromQuartiles();
 	vector<int> GetNotInitialFrames();
 	vector<int> GetMatches(int frameId1, int frameId2);
 	vector<cv::Point2f> GetPoints(int frameId);
