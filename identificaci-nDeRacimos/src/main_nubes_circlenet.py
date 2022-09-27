@@ -1,4 +1,4 @@
-from icp_with_alignment import icp_from_neighbors
+from icp_with_alignment import icp_scaled_and_aligned
 from cloud_management import add_noise_to_cloud, get_minimum_distance
 import copy
 import random
@@ -65,8 +65,8 @@ def main(args=None):
 
                 start = time()
                 angle = np.pi * step
-                metric = icp_from_neighbors(source, target,minimun_distance * thresh,
-                                             n_neighbors, angle, distances_tolerance)
+                metric = icp_scaled_and_aligned(source, target, thresh,
+                                             n_neighbors, angle)
                 giros = 2/step
                 row = pd.DataFrame(
                     [[cn1,metric[1],cn2,metric[2],metric[0],label,metric[3],thresh,giros]],
