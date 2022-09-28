@@ -48,7 +48,7 @@ def main(args=None):
     n_neighbors = 1             # cantidad de vecinos por cada punto de una nube con los que va a intentar alinear
     distances_tolerance = 0.2   # Solo comparará puntos que en ambas nubes estén a distancias similares ) +/- 20%
     threshold_percentage_list = [0.1,0.2,0.3,0.4,0.5,1]  # porcentaje de la distancia mínima en la nube a usar como trheshold
-    angle_step_list = [1/2,1/4,1/8,1/16,1/32,1/64]     # paso de rotación de la nube "source" alrededor del eje z
+    angle_step_list = [1/4]     # paso de rotación de la nube "source" alrededor del eje z
 
     n = 0
     #times = np.zeros((n_clouds, n_clouds), dtype=float)

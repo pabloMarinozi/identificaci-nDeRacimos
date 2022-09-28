@@ -1,0 +1,50 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+library(dplyr)
+library(purrr)
+library(tidyr)
+```
+
+```{r}
+setwd("~/DHARMA/identificaci-nDeRacimos/identificaci-nDeRacimos/output/salidasICP/nubes_circlenet")
+```
+
+```{r}
+df <- "nubes_circlenet" %>%
+  paste0(c(0.1,0.2,0.3,0.4,0.5,1),".csv") %>% 
+  map(read_csv) %>% bind_rows() %>% unique() 
+# %>%
+#   left_join(read_csv("nube1_names.csv")) %>%
+#   left_join(read_csv("nube2_names.csv")) %>% 
+#   filter(name1 %in% buenas01) %>% 
+#   filter(name1 %in% buenas03) %>% mutate(corrida = "01_03")
+```
+
+```{r}
+library(stringr)
+df <- df %>% mutate(nube1_frame2 = nube1 %>% str_split("_") %>% map(tail,2) %>% map(tail,1) %>% str_replace(".ply",""),
+              nube1_frame1 = nube1 %>% str_split("_") %>% map(tail,2) %>% map(head,1) %>% unlist(),
+              nube2_frame1 = nube2 %>% str_split("_") %>% map(tail,2) %>% map(head,1) %>% unlist(),
+              nube2_frame2 = nube2 %>% str_split("_") %>% map(tail,2) %>% map(tail,1) %>% str_replace(".ply",""))
+```
+
+```{r}
+library(ggplot2)
+radios <- df$radio %>% unique()
+for (r in radios){
+  plot(ggplot(df %>% filter(radio == r)) + geom_histogram(aes(matcheos)) + scale_x_continuous(breaks = seq(0, 35, by = 1)) + ggtitle(paste("radio:",r))
+  )
+}
+
+```
+
+```{r}
+ggplot(df %>% filter(nube1_frame2 == nube2_frame1 | nube1_frame1 == nube2_frame2 | nube1_frame2 == nube2_frame2)) + geom_histogram(aes(matcheos)) + scale_x_continuous(breaks = seq(0, 35, by = 1))
+```
+
