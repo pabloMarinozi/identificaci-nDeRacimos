@@ -217,16 +217,16 @@ def icp_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
     than the threshold used in ICP.
     Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
     result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his
-    nearest neighbor from the target point cloud. Once each alignment is done, icp is compute for different rotations
-    around the alignment axis. The number of alignments is give by the 2*pi / angle_step.
+    nearest neighbor from the target point cloud. Once each alignment is done, icp is computed for different rotations
+    around the alignment axis. The number of alignments is given by the 2*pi / angle_step.
     inputs:
-        source: PointCloud object (open3d), point cloud to be compare with target point cloud
-        target: PointCloud object (open3d), point cloud to be compare with source point cloud
+        source: PointCloud object (open3d), point cloud to be compared with target point cloud
+        target: PointCloud object (open3d), point cloud to be compared with source point cloud
         threshold: float, radius that define the area in which each point of the
                    source point cloud can find the closest point of the target point cloud
         n_neighbors: int, number of neighbors for each point of each cloud, in which the alignment will be carried out
         angle_step: float, the angle unit that the source point cloud will be rotated over the aligned axis as a
-        different initializations to aplly icp for each pairwise alignment.
+        different initializations to apply icp for each pairwise alignment.
     return:
         tuple that contains:
             - int,  number of matching points
@@ -286,16 +286,16 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
     """
     Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
     result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his nearest neighbor
-    from the target point cloud. Once each alignment is done, icp is compute for different rotations around the
-    alignment axis. The number of alignments is give by the 2*pi / angle_step.
+    from the target point cloud. Once each alignment is done, icp is computed for different rotations around the
+    alignment axis. The number of alignments is given by the 2*pi / angle_step.
     inputs:
-        source: PointCloud object (open3d), point cloud to be compare with target point cloud
-        target: PointCloud object (open3d), point cloud to be compare with source point cloud
+        source: PointCloud object (open3d), point cloud to be compared with target point cloud
+        target: PointCloud object (open3d), point cloud to be compared with source point cloud
         threshold_percentage: float, percentage of the minimun distance that will define the area in which each point of
                               the source point cloud can find the closest point of the target point cloud
         n_neighbors: int, number of neighbors for each point of each cloud, in which the alignment will be carried out
         angle_step: float, the angle unit that the source point cloud will be rotated over the aligned axis as a
-        different initializations to aplly icp for each pairwise alignment.
+        different initializations to apply icp for each pairwise alignment.
 
     return:
         tuple that contains:
