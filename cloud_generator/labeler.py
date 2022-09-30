@@ -13,7 +13,7 @@ def main(args=None):
         -INPUT:
             --input_dir: folder with inputs
         -OUTPUT:
-            --output_dir: Carpeta de salida dondese creará el archivo labels
+            --output_dir: Carpeta de salida donde se creará el archivo labels
         """
     )
     parser.add_argument('-i','--input_dir', type=str, required=True)
