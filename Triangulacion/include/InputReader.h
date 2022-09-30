@@ -19,13 +19,14 @@ public:
 	cv::Mat GetK();
 	vector<tuple<int,int,int> > GetInitialPairsFromMostMatches();
     vector<tuple<int,int,int> > GetInitialPairsFromQuartiles();
-	vector<int> GetNotInitialFrames();
+	vector<int> GetNotInitialFrames(int n);
 	vector<int> GetMatches(int frameId1, int frameId2);
 	vector<cv::Point2f> GetPoints(int frameId);
 	vector<cv::KeyPoint> GetKPs(int frameId);
 	vector<cv::KeyPoint> GetUndistortedKPs(int frameId, cv::Mat K);
 	vector<int> GetTrackIds(int frameId);
 	string GetImageName(int frameId);
+    const vector<int>& getAllTracks() const {return allTracks;}
 	const map<int, vector<cv::Point2f> >& getKps() const {return kps;}
 	void setKps(const map<int, vector<cv::Point2f> >& kps) {this->kps = kps;}
 	const map<int, vector<int> >& getTrackIds() const {return track_ids;}
@@ -54,7 +55,9 @@ protected:
 	const string strMatchesPath;
     const string strImagesPath;
 	int numFrames;
+    vector<int> allTracks;
 	map<int, vector<cv::Point2f> > kps;
+    map<int, map<int, cv::Point2f> > kps_maps;
 	map<int, vector<int> > track_ids;
 	map<int, string> img_names;
 	map<int, string> labels;

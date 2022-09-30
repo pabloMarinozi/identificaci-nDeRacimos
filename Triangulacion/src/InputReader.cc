@@ -14,6 +14,7 @@
 #include <opencv2/core/persistence.hpp>
 #include <opencv2/core/types.hpp>
 #include <algorithm>
+#include <random>
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
@@ -84,11 +85,13 @@ InputReader::InputReader(const string &strSettingPath,
 							atof(cols[i * numcolsperframe + 4].c_str()),
 							atof(cols[i * numcolsperframe + 5].c_str()));
 					kps[i].push_back(kp);
+					kps_maps[i][id_track] = kp;
 					radios[i].push_back(
 							atof(cols[i * numcolsperframe + 6].c_str()));
 					track_ids[i].push_back(id_track);
 				}
 			}
+			allTracks.push_back(id_track);
 		}
 	}
 	frame0 = -1;
@@ -288,7 +291,7 @@ vector<tuple<int,int,int> > InputReader::GetInitialPairsFromQuartiles() {
 }
 	
 
-vector<int> InputReader::GetNotInitialFrames() {
+vector<int> InputReader::GetNotInitialFrames(int n=0) {
 	//if (frame0 < 0 || frame1 < 0)
 	//	vector<int> m = GetInitialMatches();
 	vector<int> f;
@@ -296,7 +299,17 @@ vector<int> InputReader::GetNotInitialFrames() {
 		if (i != frame0 && i != frame1)
 			f.push_back(i);
 	}
-	return f;
+	if(n>0){
+		vector<int> out;
+	    size_t nelems = n;
+
+		std::sample(f.begin(),f.end(),
+	        std::back_inserter(out), n,
+	        std::mt19937{std::random_device{}()});
+		return out;
+	}else{
+		return f;
+	}
 }
 
 vector<int> InputReader::GetIndexInKfs(vector<int> kfs, int track) {

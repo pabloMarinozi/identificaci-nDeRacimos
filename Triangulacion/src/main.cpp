@@ -74,9 +74,12 @@ int main(int argc, char **argv) {
 	int best = 0;
 	int num, f0, f1;
 
-
+	vector<map<int, map<int, cv::Point2f> > > rep_acumulator;
+	vector<vector<long unsigned int> > kfIds_acumulator;
 	while(mvPairs.size()>best){
+
 		tie(num,f0,f1) = mvPairs[best];
+		
 		//while(!initialized){
 
 				//int f0 = mpInputReader->getFrame0(), f1 = mpInputReader->getFrame1();
@@ -100,9 +103,9 @@ int main(int argc, char **argv) {
 		//}
 
 		if(initialized){
-				// Set KeyFrame Poses
-				//mpInputReader->setFrame0(f0);
-				//mpInputReader->setFrame1(f1);
+			// Set KeyFrame Poses
+			mpInputReader->setFrame0(f0);
+			mpInputReader->setFrame1(f1);
 			cv::Mat Tcw1 = cv::Mat::eye(4, 4, CV_32F);
 			cv::Mat Tcw2 = cv::Mat::eye(4, 4, CV_32F);
 			Rcw.copyTo(Tcw2.rowRange(0, 3).colRange(0, 3));
@@ -135,9 +138,9 @@ int main(int argc, char **argv) {
 		if (scaleFactor > 0)
 			mpMapManager->ScaleMap(scaleFactor);
 
-		/*
+		
 		//Iterar sobre los frames para procesar las observaciones
-		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames();
+		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames(1);
 		for (auto i : kfRestantes) {
 			mpMapManager->CreateNewKeyFrame(i, mpInputReader);
 			scaleFactor = mpMapManager->GetScaleFactor(distancia_calibracion,
@@ -147,12 +150,12 @@ int main(int argc, char **argv) {
 			int cal_1=mpInputReader->getTrackCal1(), cal_2 =mpInputReader->getTrackCal2();
 			if (cal_1>=0 & cal_2>=0)
 				cout<<mpMapManager->GetDistanceCal1Cal2(cal_1,cal_2)<<endl;
-		}*/
+		}
 
 
 			//Realizar Reproyecciones para verificar Resultados
 		map<int, vector<float> > errors_map;
-		map<int, vector<cv::Point2f> > rep_map;
+		map<int, map<int, cv::Point2f> > rep_map;
 		map<int, vector<cv::Point2f> > normal_points_map;
 		map<int, vector<float> > vols_rep_map;
 		map<int, vector<float> > vols_real_map;
@@ -163,7 +166,7 @@ int main(int argc, char **argv) {
 		vector<long unsigned int> allKfIds = mpMapManager->GetAllKeyFramesId();
 		for (auto i : allKfIds) {
 				//if(!mpMapManager->CheckKF(i)) continue;
-			vector<cv::Point2f> reprojections =
+			map<int, cv::Point2f> reprojections =
 				mpMapManager->ReproyectAllMapPointsOnKeyFrame(i);
 			vector<cv::Point2f> normal_points =
 				mpMapManager->CreatePointsOnNormalPlane(i, 1);
@@ -177,16 +180,16 @@ int main(int argc, char **argv) {
 			cv::Mat img = cv::imread(imgname);
 			for (int j = 0; j < kps.size(); ++j) {
 				int track = tracks[j];
-				if (reprojections[j].x >= 0 && reprojections[j].y >= 0) {
-					float dist = cv::norm(reprojections[j] - kps[j]);
+				if (reprojections[track].x >= 0 && reprojections[track].y >= 0) {
+					float dist = cv::norm(reprojections[track] - kps[j]);
 					errors.push_back(dist);
-					cv::circle(img, reprojections[j], 3, cv::Scalar(0, 255, 0), 2);
-					cv::putText(img, to_string(track), reprojections[j], 0, 0.5,
+					cv::circle(img, reprojections[track], 3, cv::Scalar(0, 255, 0), 2);
+					cv::putText(img, to_string(track), reprojections[track], 0, 0.5,
 						cv::Scalar(0, 255, 0));
 
 						//calcula volumenes
 					float pixeles_en_1cm_rep = cv::norm(
-						normal_points[j] - reprojections[j]);
+						normal_points[j] - reprojections[track]);
 					float pixeles_en_1cm_real = cv::norm(normal_points[j] - kps[j]);
 					float radio_en_cm_rep = radios[i][j] / pixeles_en_1cm_rep;
 					float radio_en_cm_real = radios[i][j] / pixeles_en_1cm_real;
@@ -216,6 +219,8 @@ int main(int argc, char **argv) {
 			imgs[i]=img;
 			img_names[i]=all_img_names[i];
 		}
+		rep_acumulator.push_back(rep_map);
+		kfIds_acumulator.push_back(allKfIds);
 
 			//Generar Salidas
 		map<int, cv::Point3d> mps = mpMapManager->GetAllMapPoints();
@@ -235,6 +240,31 @@ int main(int argc, char **argv) {
 
 		best++;
 	}
+
+	// Generar Dispersion Reproyecciones
+	int frame = rand() % numFrames;
+	string imgname = mpInputReader->GetImageName(frame);
+	vector<int> visibleTracks = mpInputReader->GetTrackIds(frame);
+	for (auto t : visibleTracks) {
+		cv::Mat img = cv::imread(imgname);
+		for (int num_rec = 0; num_rec < rep_acumulator.size(); ++num_rec) {
+			map<int, map<int, cv::Point2f> > rep_map = rep_acumulator[num_rec];
+			if(rep_map.count(frame) != 0){
+				map<int, cv::Point2f> all_rep = rep_map[frame];
+				cv::Point2f pt = all_rep[t];
+				cv::circle(img, pt, 3, cv::Scalar(0, 255, 0), 2);
+			}
+		}
+		string ruta = string(outputFolder)+"/"+to_string(frame)+"_"+to_string(t)+".png";
+		cv::imwrite(ruta,img);
+	}
+
+	
+
+
+
+
+
 	return 0;
 }
 

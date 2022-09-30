@@ -22,7 +22,7 @@ public:
 	MapManager();
 	void CreateInitialMapMonocular(MapCreationDTO dto);
 	void CreateNewKeyFrame(int id, InputReader* inputReader);
-	vector<cv::Point2f> ReproyectAllMapPointsOnKeyFrame(int id);
+	map<int, cv::Point2f>  ReproyectAllMapPointsOnKeyFrame(int id);
 	map<int, cv::Point3d> GetAllMapPoints();
     vector<long unsigned int> GetAllKeyFramesId();
 	void ScaleMap(float scaleFactor);

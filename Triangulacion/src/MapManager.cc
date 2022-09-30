@@ -240,8 +240,8 @@ void MapManager::CreateNewKeyFrame(int id, InputReader* mpInputReader) {
 
 }
 
-vector<cv::Point2f> MapManager::ReproyectAllMapPointsOnKeyFrame(int id) {
-	vector<cv::Point2f> rep;
+map<int, cv::Point2f> MapManager::ReproyectAllMapPointsOnKeyFrame(int id) {
+	map<int, cv::Point2f> rep;
 	vector<KeyFrame*> allKFs = mpMap->GetAllKeyFrames();
 	cout<<"Reproyectando MapPoints sobre el Keyframe "<<id<<endl;
 	KeyFrame* kf = BuscarKF(id, allKFs);

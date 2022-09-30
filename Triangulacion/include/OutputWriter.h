@@ -18,7 +18,7 @@ public:
 	void guardarImagenes(map<int, cv::Mat> imgs, map<int, string> names);
 	void guardarResultados(vector<long unsigned int> allKfIds,
             map<int, vector<float> > errors_map,
-			map<int, vector<cv::Point2f> > rep_map,
+			map<int, map<int, cv::Point2f> > rep_map,
 			map<int, vector<cv::Point2f> > kps,
 			map<int, vector<cv::Point2f> > points_map,
 			map<int, vector<int> > track_ids, map<int, cv::Point3d> mps,

@@ -14,19 +14,16 @@
 Converter::Converter() {
 }
 
-vector<cv::Point2f> Converter::ReprojectAllMapPointsOnKeyFrame(KeyFrame* kf){
+map<int, cv::Point2f> Converter::ReprojectAllMapPointsOnKeyFrame(KeyFrame* kf){
 	vector<MapPoint*> visibles = kf->GetMapPointMatches();
-	vector<cv::Point2f> rep;
-	for (int i = 0; i < visibles.size(); ++i) {
-
-		MapPoint* pMP = visibles[i];
+	map<int, cv::Point2f> rep;
+	for (MapPoint* pMP : visibles) {
 		if(pMP){
-			rep.push_back(ReprojectMapPointOnKeyFrame(pMP,kf));
+			rep[pMP->mnId] = ReprojectMapPointOnKeyFrame(pMP,kf);
 		}
-		else{
-
-			rep.push_back(cv::Point2f(-1,-1));
-		}
+		// else{
+		// 	rep[pMP->mnId] = cv::Point2f(-1,-1);
+		// }
 	}
 	return rep;
 }
