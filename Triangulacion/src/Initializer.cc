@@ -51,7 +51,7 @@ Initializer::Initializer(cv::Mat K, std::vector<cv::KeyPoint> kps1,std::vector<c
     mMaxIterations = iterations;
 }
 
-bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Mat &t21,
+bool Initializer::Initialize(const map<int, Match> &vMatches12, cv::Mat &R21, cv::Mat &t21,
                              vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated)
 {
     // Fill structures with current keypoints and matches with reference frame
@@ -60,7 +60,14 @@ bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Ma
     mvMatches12.clear();
     mvMatches12.reserve(mvKeys2.size());
     mvbMatched1.resize(mvKeys1.size());
-    for(size_t i=0, iend=vMatches12.size();i<iend; i++)
+    std::fill(mvbMatched1.begin(), mvbMatched1.end(), false);
+    for (auto const& x : vMatches12){
+        int trackId = x.first;
+        Match match = x.second;
+        mvMatches12.push_back(match);
+        mvbMatched1[match.first]=true;
+    }
+    /*for(size_t i=0, iend=vMatches12.size();i<iend; i++)
     {
         if(vMatches12[i]>=0)
         {
@@ -69,7 +76,7 @@ bool Initializer::Initialize(const vector<int> &vMatches12, cv::Mat &R21, cv::Ma
         }
         else
             mvbMatched1[i]=false;
-    }
+    }*/
 
     const int N = mvMatches12.size();
 

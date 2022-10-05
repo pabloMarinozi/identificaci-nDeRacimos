@@ -12,6 +12,8 @@ using namespace std;
 class Map;
 
 class InputReader {
+    typedef pair<int, int> Match;
+
 public:
 	InputReader(const string &strSettingPath, const string &strMatchesPaths, const string &strImagesPath);
 	int GetNumFrames();
@@ -20,8 +22,8 @@ public:
 	vector<tuple<int,int,int> > GetInitialPairsFromMostMatches();
     vector<tuple<int,int,int> > GetInitialPairsFromQuartiles();
 	vector<int> GetNotInitialFrames(int n);
-	vector<int> GetMatches(int frameId1, int frameId2);
-	vector<cv::Point2f> GetPoints(int frameId);
+	map<int, Match> GetMatches(int frameId1, int frameId2);
+	map<int, cv::Point2f> GetPoints(int frameId);
 	vector<cv::KeyPoint> GetKPs(int frameId);
 	vector<cv::KeyPoint> GetUndistortedKPs(int frameId, cv::Mat K);
 	vector<int> GetTrackIds(int frameId);
@@ -45,7 +47,7 @@ public:
     void setFrame1(int f) {frame1 = f;}
 	int getFrame0() const {return frame0;}
 	int getFrame1() const {return frame1;}
-	const map<int, vector<float> >& getRadios() const {return radios;}
+	const map<int, map<int, float> >& getRadios() const {return radios;}
 	const map<int, string>& getLabels() const {return labels;}
 
 	bool error;
@@ -56,12 +58,11 @@ protected:
     const string strImagesPath;
 	int numFrames;
     vector<int> allTracks;
-	map<int, vector<cv::Point2f> > kps;
-    map<int, map<int, cv::Point2f> > kps_maps;
+    map<int, vector<cv::Point2f> > kps;
 	map<int, vector<int> > track_ids;
 	map<int, string> img_names;
 	map<int, string> labels;
-	map<int, vector<float> > radios;
+	map<int, map<int, float> > radios;
 
 	int track_cal_1;
 	int track_cal_2;

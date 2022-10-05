@@ -17,6 +17,7 @@
 
 using namespace std;
 using namespace ORB_SLAM2;
+typedef pair<int, int> Match;
 
 MapManager::MapManager() {
 }
@@ -47,32 +48,32 @@ void MapManager::CreateInitialMapMonocular(MapCreationDTO dto) {
 	mpMap->AddKeyFrame(pKFcur);
 
 	// Create MapPoints and asscoiate to keyframes
-	vector<int> mvIniMatches = dto.getMvIniMatches();
+	map<int, Match> mvIniMatches = dto.getMvIniMatches();
 	vector<cv::Point3f> mvIniP3D = dto.getMvIniP3D();
 	vector<int> mvIds = dto.getMvTracks();
-	for (size_t i = 0; i < mvIniMatches.size(); i++) {
-		if (mvIniMatches[i] < 0){
-			cout<<"El MapPoint con id "<< mvIds[i] << " no pudo ser creado por no estar visible en ambos frames."<<endl;
-			continue;
-		}
-
+	//for (size_t i = 0; i < mvIniMatches.size(); i++) {
+	for (auto const& x : mvIniMatches){
+		int trackId = x.first;
+		int i1, i2;
+		tie(i1, i2) = x.second;
+		
 
 		//Create MapPoint.
-		cv::Mat worldPos(mvIniP3D[i]);
+		cv::Mat worldPos(mvIniP3D[i1]);
 
-		MapPoint* pMP = new MapPoint(worldPos, pKFcur, mpMap);
-		if(mvIniP3D[i].x==0.f && mvIniP3D[i].y==0.f && mvIniP3D[i].z==0.f){
+		MapPoint* pMP = new MapPoint(worldPos, pKFcur, mpMap, trackId);
+		if(mvIniP3D[i1].x==0.f && mvIniP3D[i1].y==0.f && mvIniP3D[i1].z==0.f){
 			pMP->SetBadFlag();
-			cout<<"El MapPoint con id "<< mvIds[i] << " es defectuoso."<<endl;
+			cout<<"El MapPoint con id "<< trackId << " es defectuoso."<<endl;
 		}
 
-		pMP->mnId = mvIds[i];
+		pMP->mnId = trackId;
 
-		pKFini->AddMapPoint(pMP, i);
-		pKFcur->AddMapPoint(pMP, mvIniMatches[i]);
+		pKFini->AddMapPoint(pMP, i1);
+		pKFcur->AddMapPoint(pMP, i2);
 
-		pMP->AddObservation(pKFini, i);
-		pMP->AddObservation(pKFcur, mvIniMatches[i]);
+		pMP->AddObservation(pKFini, i1);
+		pMP->AddObservation(pKFcur, i2);
 
 		//pMP->ComputeDistinctiveDescriptors();
 		pMP->UpdateNormalAndDepth();
@@ -88,6 +89,14 @@ void MapManager::CreateInitialMapMonocular(MapCreationDTO dto) {
 	// Bundle Adjustment
 	cout << "New Map created with " << mpMap->MapPointsInMap() << " points from frames "<<dto.getFrame0()<<" and "<<dto.getFrame1()
 			<< endl;
+
+	for (auto const& trackId : mvIds) {
+		if (mvIniMatches.count(trackId) == 0){
+			cout<<"El MapPoint con id "<< trackId << " no pudo ser creado por no estar visible en ambos frames."<<endl;
+			continue;
+		}
+	}
+
 	bool mbStopGBA = false;
 	Optimizer::GlobalBundleAdjustemnt(mpMap, 20000, &mbStopGBA, pKFcur->mnId,
 			false);
@@ -165,62 +174,66 @@ void MapManager::CreateNewKeyFrame(int id, InputReader* mpInputReader) {
 		cout<<"Buscando matcheos con el frame "<<idAnterior<<"..."<<endl;
 		//mientras queden keypoints sin matchear o queden keyframes previos por analizar
 		KeyFrame* kfPrevio = BuscarKF(idAnterior, allKFs);
-		vector<int> mvMatches = mpInputReader->GetMatches(id, idAnterior);
+		map<int, Match> mvMatches = mpInputReader->GetMatches(id, idAnterior);
 		vector<int> tracks = mpInputReader->GetTrackIds(id);
 
-		for (int index = 0; index < mvMatches.size(); index++) {
-			if (tieneMatchPrevio[index])
+		for (auto const& m : mvMatches){
+		//for (int index = 0; index < mvMatches.size(); index++) {
+			int track = m.first;
+			int index1 = m.second.first;
+			int index2 = m.second.second;
+			if (tieneMatchPrevio[index1])
 				continue;
-			if (mvMatches[index] >= 0) {
-				MapPoint* pMP = BuscarMP(tracks[index],allMPs);
-				if(pMP && !pMP->isBad())
-					cout<<"Ya existía el mapPoint "<<tracks[index]<<". Añadiendo observación."<<endl;
+			//if (mvMatches[index] >= 0) {
+			MapPoint* pMP = BuscarMP(track,allMPs);
+			if(pMP && !pMP->isBad())
+				cout<<"Ya existía el mapPoint "<<track<<". Añadiendo observación."<<endl;
 
-				if (!pMP || pMP->isBad()) {    //es el primer matcheo, hay que crear el mapPoint
-					cv::KeyPoint kp1 = kfPrevio->mvKeys[mvMatches[index]];
-					cv::KeyPoint kp2 = mvKeys[index];
-					Converter* converter = new Converter();
-					cout<<"Se intentará triangular el MapPoint con id"<<tracks[index]<<endl;
-					cv::Mat x3D = converter->TriangularMapPoint(
-							make_pair(kfPrevio, kp1.pt),
-							make_pair(pKF, kp2.pt));
+			if (!pMP || pMP->isBad()) {    //es el primer matcheo, hay que crear el mapPoint
+				cv::KeyPoint kp1 = kfPrevio->mvKeys[index2];
+				cv::KeyPoint kp2 = mvKeys[index1];
+				Converter* converter = new Converter();
+				cout<<"Se intentará triangular el MapPoint con id"<<track<<endl;
+				cv::Mat x3D = converter->TriangularMapPoint(
+						make_pair(kfPrevio, kp1.pt),
+						make_pair(pKF, kp2.pt));
 
-					if(!x3D.empty()){
-						MapPoint* pMP_viejo = BuscarMP(tracks[index],allMPs);
-						if(pMP && pMP->isBad()) mpMap->EraseMapPoint(pMP_viejo);
+				if(!x3D.empty()){
+					MapPoint* pMP_viejo = BuscarMP(track,allMPs);
+					if(pMP && pMP->isBad()) mpMap->EraseMapPoint(pMP_viejo);
 
-						cout<<"Se generó un nuevo mapPoint con id "<<tracks[index]<<endl;
-						pMP = new ORB_SLAM2::MapPoint(x3D, pKF, mpMap);
+					cout<<"Se generó un nuevo mapPoint con id "<<track<<endl;
+					pMP = new ORB_SLAM2::MapPoint(x3D, pKF, mpMap, track);
 
-						pMP->mnId = tracks[index];
-						mpMap->AddMapPoint(pMP);
+					//pMP->mnId = tracks[index];
+					mpMap->AddMapPoint(pMP);
 
-						//Actualiza las observaciones de kfs anteriores
-						vector<int> indexes = mpInputReader->GetIndexInKfs(idsAnteriores,tracks[index]);
-						for (int i = 0; i < indexes.size(); i++) {
-							if (indexes[i]>-1) {
-								KeyFrame* kf = BuscarKF(idsAnteriores[i],allKFs);
-								kf->AddMapPoint(pMP,indexes[i]);
-								pMP->AddObservation(kf,indexes[i]);
-								cout<<"Ahora el kf "<<kf->mnId<<" observa al mapPoint "<<pMP->mnId<<endl;
-							}
+					//Actualiza las observaciones de kfs anteriores
+					vector<int> indexes = mpInputReader->GetIndexInKfs(idsAnteriores,track);
+					for (int i = 0; i < indexes.size(); i++) {
+						if (indexes[i]>-1) {
+							KeyFrame* kf = BuscarKF(idsAnteriores[i],allKFs);
+							kf->AddMapPoint(pMP,indexes[i]);
+							pMP->AddObservation(kf,indexes[i]);
+							cout<<"Ahora el kf "<<kf->mnId<<" observa al mapPoint "<<pMP->mnId<<endl;
 						}
-
 					}
+
 				}
-
-				if (!pMP || pMP->isBad()) {    //Falló la triangulación
-					cout << "Falló la triangulación del mapPoint"<< tracks[index]
-							<< " con los frames " << id << " y " << idAnterior << endl;
-					continue;
-				}
-
-				pKF->AddMapPoint(pMP, index);
-				pMP->AddObservation(pKF, index);
-				pMP->UpdateNormalAndDepth();
-
-				tieneMatchPrevio[index] = true;
 			}
+
+			if (!pMP || pMP->isBad()) {    //Falló la triangulación
+				cout << "Falló la triangulación del mapPoint"<< track
+						<< " con los frames " << id << " y " << idAnterior << endl;
+				continue;
+			}
+
+			pKF->AddMapPoint(pMP, index1);
+			pMP->AddObservation(pKF, index1);
+			pMP->UpdateNormalAndDepth();
+
+			tieneMatchPrevio[index1] = true;
+			//}
 		}
 		sonTodosTrue = std::find(begin(tieneMatchPrevio), end(tieneMatchPrevio),
 				false) == end(tieneMatchPrevio);
@@ -262,6 +275,23 @@ map<int, cv::Point3d> MapManager::GetAllMapPoints() {
 				pos.at<float>(2));
 	}
 	return mps;
+}
+
+map<int, cv::Point2f> MapManager::GetPoints(int frameId) {
+	map<int, cv::Point2f> mKps;
+	vector<KeyFrame*> allKFs = mpMap->GetAllKeyFrames();
+	KeyFrame* kf = BuscarKF(frameId, allKFs);
+	vector<MapPoint*> mps = kf->GetMapPointMatches();
+	for(int j = 0; j < mps.size(); ++j){
+		MapPoint* mp = mps[j];
+		if(!mp || mp->isBad()) continue;
+		int idx = mp->GetIndexInKeyFrame(kf);
+		if(idx<0) continue;
+		int track = mp->mnId;
+		cv::KeyPoint kp = kf->mvKeys[idx];
+		mKps[track] = kp.pt;
+	}
+	return mKps;
 }
 
 
@@ -427,7 +457,7 @@ cv::Mat calcularPlanoNormal(cv::Mat rectaVision, cv::Mat Punto){
 }
 
 
-vector<cv::Point2f> MapManager::CreatePointsOnNormalPlane(int id, float distance) {
+map<int, cv::Point2f> MapManager::CreatePointsOnNormalPlane(int id, float distance) {
 	vector<KeyFrame*> allKFs = mpMap->GetAllKeyFrames();
 	KeyFrame* kf = BuscarKF(id, allKFs);
 	cv::Mat Rcw = kf->GetRotation();
@@ -439,9 +469,10 @@ vector<cv::Point2f> MapManager::CreatePointsOnNormalPlane(int id, float distance
 	Converter* converter = new Converter();
 
 	vector<MapPoint*> centros = kf->GetMapPointMatches();
-	vector<cv::Point2f> points;
+	map<int, cv::Point2f> points;
 	for(auto centro: centros){
 		if(!centro) continue;
+		int id = centro->mnId;
 		cv::Mat pos = centro->GetWorldPos();
 		cv::Mat planoNormal = calcularPlanoNormal(lineaVision,pos);
 //		cout<<"plano: "<<planoNormal<<endl;
@@ -467,7 +498,7 @@ vector<cv::Point2f> MapManager::CreatePointsOnNormalPlane(int id, float distance
 //		cout<<"distancia: "<<norm(punto1cm-pos.t())<<endl;
 //		cout<<"p2: "<<punto1cm<<endl;
 		cv::Point2f punto1cm_2d = converter->ReproyectarPunto(Rcw,tcw,kf->mK,punto1cm);
-		points.push_back(punto1cm_2d);
+		points[id]=punto1cm_2d;
 	}
 	return points;
 }
