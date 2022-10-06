@@ -32,20 +32,23 @@ def main(args=None):
     n_clouds = len(inputs_df.index)
     clouds = {} #dict containing point clouds
     cloud_idx = 0
-    clouds_per_video = 29
+    clouds_per_video = 20
     lab = 0
     clouds_counter = 0
     a = 0
     b = 6
-    while_breaker=10
+    while_breaker=0
     name_debug = []
     while cloud_idx < 3*clouds_per_video:
         if while_breaker > 10:
             a+=1
-            while_breaker =95
+            while_breaker =15
+            if a+b > 24:
+                a = 0
+                b = 7
         for name, label in zip(inputs_df["cloud_name"], inputs_df["label"]):
-            # print(f'{a}_{a + b}.ply')
-            # print(lab)
+            print(f'{a}_{a + b}.ply')
+            print(lab)
 
             if label == lab:
                 if name.endswith(f'{a}_{a + b}.ply'):
@@ -53,8 +56,8 @@ def main(args=None):
                     cloud = o3d.io.read_point_cloud(args.input_dir + name)
                     clouds[cloud_idx] = [name, cloud, label]
                     name_debug.append(name)
-                    # print(name)
-                    # print(cloud_idx)
+                    print(name)
+                    print(cloud_idx)
                     cloud_idx += 1
                     a += 1
                     if a == 19 or a + b == 25:
@@ -88,7 +91,7 @@ def main(args=None):
     ##### hiper-parámetros ####
     n_neighbors = 1             # cantidad de vecinos por cada punto de una nube con los que va a intentar alinear
     distances_tolerance = 0.2   # Solo comparará puntos que en ambas nubes estén a distancias similares ) +/- 20%
-    threshold_percentage_list = [0.6, 0.7, 0.8]  # porcentaje de la distancia mínima en la nube a usar como trheshold
+    threshold_percentage_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.]  # porcentaje de la distancia mínima en la nube a usar como trheshold
     angle_step_list = [1/4]     # paso de rotación de la nube "source" alrededor del eje z
 
     #times = np.zeros((n_clouds, n_clouds), dtype=float)
@@ -129,8 +132,7 @@ def main(args=None):
             bucle_time = time()
             print(bucle_time - start_time)
 
-    # print(times)
-    print(end_time - start_time)
+
     
 
 if __name__ == "__main__":
