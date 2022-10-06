@@ -114,7 +114,7 @@ def main(args=None):
                     metric = icp_scaled_and_aligned(source, target, thresh,
                                                     n_neighbors, angle)
                     giros = 2 / step
-                    result[counter, :] = [cn1, metric[1], cn2, metric[2], metric[0], label, metric[3], thresh, giros],
+                    result[counter, :] = cn1, metric[1], cn2, metric[2], metric[0], label, metric[3], thresh, giros
 
                     # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
 
