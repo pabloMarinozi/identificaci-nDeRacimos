@@ -22,13 +22,14 @@ public:
 	MapManager();
 	void CreateInitialMapMonocular(MapCreationDTO dto);
 	void CreateNewKeyFrame(int id, InputReader* inputReader);
-	vector<cv::Point2f> ReproyectAllMapPointsOnKeyFrame(int id);
+	map<int, cv::Point2f>  ReproyectAllMapPointsOnKeyFrame(int id);
 	map<int, cv::Point3d> GetAllMapPoints();
     vector<long unsigned int> GetAllKeyFramesId();
 	void ScaleMap(float scaleFactor);
 	float GetScaleFactor(float dist, InputReader* inputReader);
 	float GetDistanceCal1Cal2(int id1, int id2);
-	vector<cv::Point2f> CreatePointsOnNormalPlane(int id, float distance);
+	map<int, cv::Point2f> CreatePointsOnNormalPlane(int id, float distance);
+    map<int, cv::Point2f> GetPoints(int frameId);
 
 	ORB_SLAM2::Map* mpMap;
 	unsigned long int mnLastKeyFrameId;

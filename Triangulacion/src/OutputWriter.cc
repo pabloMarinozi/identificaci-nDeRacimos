@@ -77,13 +77,13 @@ void OutputWriter::guardarImagenes(map<int, cv::Mat> imgs, map<int, string> name
 
 void OutputWriter::guardarResultados(vector<long unsigned int> allKfIds,
 		map<int, vector<float> > errors_map,
-		map<int, vector<cv::Point2f> > rep_map,
+		map<int, map<int, cv::Point2f> > rep_map,
 		map<int, vector<cv::Point2f> > kps_map,
-		map<int, vector<cv::Point2f> > points_map,
+		map<int, map<int, cv::Point2f> >points_map,
 		map<int, vector<int> > track_id_map,
 		map<int, cv::Point3d> mps,
 		int cal_1, int cal_2, map<int, string> names,
-		map<int, vector<float> > radios,
+		map<int, map<int, float> > radios,
 		map<int, vector<float> > vols_rep_map,
 		map<int, vector<float> > vols_real_map,
 		map<int, string> labels) {
@@ -153,7 +153,7 @@ void OutputWriter::guardarResultados(vector<long unsigned int> allKfIds,
 							<< ","
 							<< vols_rep_map[frame_index][index_del_track_en_el_frame];
 					//columnas "x_rep_" e "y_rep_"
-					cv::Point2f reproyeccion = rep_map[frame_index][index_del_track_en_el_frame];
+					cv::Point2f reproyeccion = rep_map[frame_index][track_id];
 					myfile << ","<<reproyeccion.x<< ","<<reproyeccion.y;
 					//columna "error_"
 					myfile << ","<< errors_map[frame_index][index_del_track_en_el_frame];

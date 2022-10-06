@@ -24,6 +24,7 @@
 #include <opencv2/core/types.hpp>
 #include <stddef.h>
 #include <utility>
+#include <map>
 #include <vector>
 
 namespace ORB_SLAM2 {
@@ -41,7 +42,7 @@ public:
 
 	// Computes in parallel a fundamental matrix and a homography
 	// Selects a model and tries to recover the motion and the structure from motion
-	bool Initialize(const std::vector<int> &vMatches12, cv::Mat &R21,
+	bool Initialize(const std::map<int, Match> &vMatches12, cv::Mat &R21,
 			cv::Mat &t21, std::vector<cv::Point3f> &vP3D,
 			std::vector<bool> &vbTriangulated);
 

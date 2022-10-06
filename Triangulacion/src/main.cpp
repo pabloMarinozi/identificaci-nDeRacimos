@@ -27,6 +27,7 @@
 
 using namespace std;
 using namespace ORB_SLAM2;
+typedef pair<int, int> Match;
 
 int main(int argc, char **argv) {
 
@@ -68,15 +69,18 @@ int main(int argc, char **argv) {
 	std::vector<cv::Point3f> mvIniP3D;
 	vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
 	vector<cv::KeyPoint> kpsUn1,kpsUn2;
-	vector<int> mvIniMatches;
+	map<int, Match> mvIniMatches;
 	vector<tuple<int,int,int> > mvPairs = mpInputReader->GetInitialPairsFromMostMatches();
 	bool initialized = false;
 	int best = 0;
 	int num, f0, f1;
 
-
+	vector<map<int, map<int, cv::Point2f> > > rep_acumulator;
+	vector<vector<long unsigned int> > kfIds_acumulator;
 	while(mvPairs.size()>best){
+
 		tie(num,f0,f1) = mvPairs[best];
+		
 		//while(!initialized){
 
 				//int f0 = mpInputReader->getFrame0(), f1 = mpInputReader->getFrame1();
@@ -88,6 +92,7 @@ int main(int argc, char **argv) {
 			mpInitializer = new Initializer(mK, kpsUn1, kpsUn2, 1.0,
 				100000);
 			mvIniMatches = mpInputReader->GetMatches(f0,f1);
+
 			if (mpInitializer->Initialize(mvIniMatches, Rcw, tcw, mvIniP3D,
 				vbTriangulated))
 				initialized = true;
@@ -100,9 +105,9 @@ int main(int argc, char **argv) {
 		//}
 
 		if(initialized){
-				// Set KeyFrame Poses
-				//mpInputReader->setFrame0(f0);
-				//mpInputReader->setFrame1(f1);
+			// Set KeyFrame Poses
+			mpInputReader->setFrame0(f0);
+			mpInputReader->setFrame1(f1);
 			cv::Mat Tcw1 = cv::Mat::eye(4, 4, CV_32F);
 			cv::Mat Tcw2 = cv::Mat::eye(4, 4, CV_32F);
 			Rcw.copyTo(Tcw2.rowRange(0, 3).colRange(0, 3));
@@ -137,7 +142,7 @@ int main(int argc, char **argv) {
 
 		/*
 		//Iterar sobre los frames para procesar las observaciones
-		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames();
+		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames(1);
 		for (auto i : kfRestantes) {
 			mpMapManager->CreateNewKeyFrame(i, mpInputReader);
 			scaleFactor = mpMapManager->GetScaleFactor(distancia_calibracion,
@@ -152,22 +157,27 @@ int main(int argc, char **argv) {
 
 			//Realizar Reproyecciones para verificar Resultados
 		map<int, vector<float> > errors_map;
-		map<int, vector<cv::Point2f> > rep_map;
-		map<int, vector<cv::Point2f> > normal_points_map;
+		map<int, map<int, cv::Point2f> > rep_map;
+		map<int, map<int, cv::Point2f> > normal_points_map;
 		map<int, vector<float> > vols_rep_map;
 		map<int, vector<float> > vols_real_map;
-		map<int, vector<float> > radios = mpInputReader->getRadios();
+		map<int, map<int, float> > radios = mpInputReader->getRadios();
 		map<int, string> all_img_names = mpInputReader->getImgNames();
 		map<int, string> img_names;
 		map<int, cv::Mat> imgs;
 		vector<long unsigned int> allKfIds = mpMapManager->GetAllKeyFramesId();
+
+
 		for (auto i : allKfIds) {
 				//if(!mpMapManager->CheckKF(i)) continue;
-			vector<cv::Point2f> reprojections =
+			map<int, cv::Point2f> reprojections =
 				mpMapManager->ReproyectAllMapPointsOnKeyFrame(i);
-			vector<cv::Point2f> normal_points =
+			//cout<<"Ya reproyectó"<<endl;
+			map<int, cv::Point2f> normal_points =
 				mpMapManager->CreatePointsOnNormalPlane(i, 1);
-			vector<cv::Point2f> kps = mpInputReader->GetPoints(i);
+			//cout<<"Ya pasò la normal"<<endl;
+			map<int, cv::Point2f> kpsMap = mpMapManager->GetPoints(i);
+			map<int, cv::Point2f> kpsInput = mpInputReader->GetPoints(i);
 			vector<int> tracks = mpInputReader->GetTrackIds(i);
 			vector<float> errors;
 			vector<float> vols_rep;
@@ -175,21 +185,26 @@ int main(int argc, char **argv) {
 			string imgname = mpInputReader->GetImageName(i);
 
 			cv::Mat img = cv::imread(imgname);
-			for (int j = 0; j < kps.size(); ++j) {
-				int track = tracks[j];
-				if (reprojections[j].x >= 0 && reprojections[j].y >= 0) {
-					float dist = cv::norm(reprojections[j] - kps[j]);
+			for (auto const& tuple : kpsInput){
+			//for (int j = 0; j < kps.size(); ++j) {
+
+				int track = tuple.first;
+				cv::Point2f kp = tuple.second;
+				cv::Point2f rep = reprojections[track];
+				cv::Point2f normal = normal_points[track];
+				cv::Point2f kp2 = kpsMap[track];
+				if (rep.x >= 0 && rep.y >= 0) {
+					float dist = cv::norm(rep - kp);
 					errors.push_back(dist);
-					cv::circle(img, reprojections[j], 3, cv::Scalar(0, 255, 0), 2);
-					cv::putText(img, to_string(track), reprojections[j], 0, 0.5,
+					cv::circle(img, rep, 3, cv::Scalar(0, 255, 0), 2);
+					cv::putText(img, to_string(track), rep, 0, 0.5,
 						cv::Scalar(0, 255, 0));
 
 						//calcula volumenes
-					float pixeles_en_1cm_rep = cv::norm(
-						normal_points[j] - reprojections[j]);
-					float pixeles_en_1cm_real = cv::norm(normal_points[j] - kps[j]);
-					float radio_en_cm_rep = radios[i][j] / pixeles_en_1cm_rep;
-					float radio_en_cm_real = radios[i][j] / pixeles_en_1cm_real;
+					float pixeles_en_1cm_rep = cv::norm(normal - rep);
+					float pixeles_en_1cm_real = cv::norm(normal - kp);
+					float radio_en_cm_rep = radios[i][track] / pixeles_en_1cm_rep;
+					float radio_en_cm_real = radios[i][track] / pixeles_en_1cm_real;
 					float vol_rep = (4 * M_PI * radio_en_cm_rep * radio_en_cm_rep
 						* radio_en_cm_rep) / 3;
 					float vol_real = (4 * M_PI * radio_en_cm_real * radio_en_cm_real
@@ -197,14 +212,14 @@ int main(int argc, char **argv) {
 					vols_rep.push_back(vol_rep);
 					vols_real.push_back(vol_real);
 
-					cv::circle(img, normal_points[j], 2, cv::Scalar(0, 0, 255), 2);
-					cv::putText(img, to_string(track), normal_points[j], 0, 0.5,
+					cv::circle(img, normal, 2, cv::Scalar(0, 0, 255), 2);
+					cv::putText(img, to_string(track), normal, 0, 0.5,
 						cv::Scalar(0, 0, 255));
 				} else
 				errors.push_back(-1);
-				cv::circle(img, kps[j], 2, cv::Scalar(255, 0, 0), 2);
+				cv::circle(img, kp, 2, cv::Scalar(255, 0, 0), 2);
 
-				cv::putText(img, to_string(track), kps[j], 0, 0.5,
+				cv::putText(img, to_string(track), kp, 0, 0.5,
 					cv::Scalar(255, 0, 0));
 
 			}
@@ -216,6 +231,8 @@ int main(int argc, char **argv) {
 			imgs[i]=img;
 			img_names[i]=all_img_names[i];
 		}
+		rep_acumulator.push_back(rep_map);
+		kfIds_acumulator.push_back(allKfIds);
 
 			//Generar Salidas
 		map<int, cv::Point3d> mps = mpMapManager->GetAllMapPoints();
@@ -235,6 +252,41 @@ int main(int argc, char **argv) {
 
 		best++;
 	}
+
+	// Generar Dispersion Reproyecciones
+	int frame = 21;//rand() % numFrames;
+	string imgname = mpInputReader->GetImageName(frame);
+	vector<int> visibleTracks = mpInputReader->GetTrackIds(frame);
+	map<int, cv::Point2f> kps = mpInputReader->GetPoints(frame);
+	for (int i = 0; i < visibleTracks.size(); ++i) {
+		int t = visibleTracks[i];
+		cv::Mat img = cv::imread(imgname);
+		//Dibuja las reproyecciones
+		for (int num_rec = 0; num_rec < rep_acumulator.size(); ++num_rec) {
+			tie(num,f0,f1) = mvPairs[num_rec];
+			map<int, map<int, cv::Point2f> > rep_map = rep_acumulator[num_rec];
+			if(rep_map.count(frame) != 0){
+				map<int, cv::Point2f> all_rep = rep_map[frame];
+				cv::Point2f pt = all_rep[t];
+				cv::circle(img, pt, 3, cv::Scalar(0, 255, 0), 2);
+				cv::putText(img, to_string(f0)+"_"+to_string(f1), pt, 0, 0.3, cv::Scalar(0, 0, 255));
+			}
+		}
+		//Dibuja la etiqueta
+		cv::Point2f kp = kps[t];
+		cv::circle(img, kp, 2, cv::Scalar(255, 0, 0), 2);
+		cv::putText(img, to_string(t), kp, 0, 1, cv::Scalar(255, 0, 0));
+		//Guarda la imagen
+		string ruta = string(outputFolder)+"/t"+to_string(frame)+"_b"+to_string(t)+".png";
+		cv::imwrite(ruta,img);
+	}
+
+	
+
+
+
+
+
 	return 0;
 }
 

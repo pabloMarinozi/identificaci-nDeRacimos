@@ -14,6 +14,7 @@
 #include <opencv2/core/persistence.hpp>
 #include <opencv2/core/types.hpp>
 #include <algorithm>
+#include <random>
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
@@ -21,6 +22,7 @@
 #include <string>
 
 using namespace std;
+typedef pair<int, int> Match;
 
 vector<string> getCols(string str) {
 	vector<string> cols;
@@ -84,11 +86,12 @@ InputReader::InputReader(const string &strSettingPath,
 							atof(cols[i * numcolsperframe + 4].c_str()),
 							atof(cols[i * numcolsperframe + 5].c_str()));
 					kps[i].push_back(kp);
-					radios[i].push_back(
-							atof(cols[i * numcolsperframe + 6].c_str()));
+					radios[i][id_track] =
+							atof(cols[i * numcolsperframe + 6].c_str());
 					track_ids[i].push_back(id_track);
 				}
 			}
+			allTracks.push_back(id_track);
 		}
 	}
 	frame0 = -1;
@@ -174,25 +177,40 @@ std::string dirnameOf(const std::string& fname) {
 	return (std::string::npos == pos) ? "" : fname.substr(0, pos);
 }
 
-vector<int> InputReader::GetMatches(int frameId1, int frameId2) {
-	vector<int> matches;
+
+
+/**
+ * Get observations of the same 3D Points on both frames.
+ *
+ * @params frameId1, frameId2 ids of the frames whose matches are being looked for.
+ * @return a map whith trackId as keys and matches as values 
+ */
+map<int, Match> InputReader::GetMatches(int frameId1, int frameId2) {
+	map<int, Match> matches;
 	vector<int> tracks1 = track_ids[frameId1];
 	vector<int> tracks2 = track_ids[frameId2];
 	for (int i1 = 0; i1 < tracks1.size(); ++i1) {
-		int match_index = -1;
+		int match_index = -1, trackId = tracks1[i1];
 		for (int i2 = 0; i2 < tracks2.size(); ++i2) {
-			if (tracks1[i1] == tracks2[i2]) {
+			if (trackId == tracks2[i2]) {
 				match_index = i2;
 				break;
 			}
 		}
-		matches.push_back(match_index);
+		if(match_index>0) matches[trackId] = make_pair(i1, match_index);
 	}
 	return matches;
 }
 
-vector<cv::Point2f> InputReader::GetPoints(int frameId) {
-	return kps[frameId];
+map<int, cv::Point2f> InputReader::GetPoints(int frameId) {
+	map<int, cv::Point2f> mKps;
+	vector<cv::Point2f> vKps = kps[frameId];
+	vector<int> tracks = track_ids[frameId];
+	for (int j = 0; j < vKps.size(); ++j) {
+		int t  = tracks[j];
+		mKps[t] = vKps[j];
+	}
+	return mKps;
 }
 
 int InputReader::GetNumFrames() {
@@ -260,12 +278,8 @@ vector<tuple<int,int,int> > InputReader::GetInitialPairsFromMostMatches() {
 		for (int j = 0; j < numFrames; j++) {
 			if (i >= j | abs(i-j) < dist)
 				continue;
-			vector<int> matches = GetMatches(i, j);
-			int num = 0;
-			for (int k = 0; k < matches.size(); k++) {
-				if (matches[k] != -1)
-					num++;
-			}
+			map<int, Match> matches = GetMatches(i, j);
+			int num = matches.size();
 			pairs.push_back(make_tuple(num,i,j));
 			}
 	}	
@@ -288,7 +302,7 @@ vector<tuple<int,int,int> > InputReader::GetInitialPairsFromQuartiles() {
 }
 	
 
-vector<int> InputReader::GetNotInitialFrames() {
+vector<int> InputReader::GetNotInitialFrames(int n=0) {
 	//if (frame0 < 0 || frame1 < 0)
 	//	vector<int> m = GetInitialMatches();
 	vector<int> f;
@@ -296,7 +310,17 @@ vector<int> InputReader::GetNotInitialFrames() {
 		if (i != frame0 && i != frame1)
 			f.push_back(i);
 	}
-	return f;
+	if(n>0){
+		vector<int> out;
+	    size_t nelems = n;
+
+		std::sample(f.begin(),f.end(),
+	        std::back_inserter(out), n,
+	        std::mt19937{std::random_device{}()});
+		return out;
+	}else{
+		return f;
+	}
 }
 
 vector<int> InputReader::GetIndexInKfs(vector<int> kfs, int track) {

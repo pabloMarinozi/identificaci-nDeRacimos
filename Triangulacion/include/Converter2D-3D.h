@@ -15,7 +15,7 @@ public:
 	Converter();
 	cv::Mat TriangularMapPoint(pair<KeyFrame*, cv::Point2f> kp1,
 			pair<KeyFrame*, cv::Point2f> kp2);
-	vector<cv::Point2f> ReprojectAllMapPointsOnKeyFrame(KeyFrame* kf);
+	map<int, cv::Point2f> ReprojectAllMapPointsOnKeyFrame(KeyFrame* kf);
 	cv::Point2f ReprojectMapPointOnKeyFrame(MapPoint* hp, KeyFrame* kf);
 	cv::Point2f ReproyectarPunto(cv::Mat R, cv::Mat t, cv::Mat K, cv::Mat p3d);
 
