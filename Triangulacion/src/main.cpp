@@ -140,9 +140,9 @@ int main(int argc, char **argv) {
 		if (scaleFactor > 0)
 			mpMapManager->ScaleMap(scaleFactor);
 
-		/*
+		
 		//Iterar sobre los frames para procesar las observaciones
-		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames(1);
+		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames();
 		for (auto i : kfRestantes) {
 			mpMapManager->CreateNewKeyFrame(i, mpInputReader);
 			scaleFactor = mpMapManager->GetScaleFactor(distancia_calibracion,
@@ -152,10 +152,10 @@ int main(int argc, char **argv) {
 			int cal_1=mpInputReader->getTrackCal1(), cal_2 =mpInputReader->getTrackCal2();
 			if (cal_1>=0 & cal_2>=0)
 				cout<<mpMapManager->GetDistanceCal1Cal2(cal_1,cal_2)<<endl;
-		}*/
+		}
 
 
-			//Realizar Reproyecciones para verificar Resultados
+		//Realizar Reproyecciones para verificar Resultados
 		map<int, vector<float> > errors_map;
 		map<int, map<int, cv::Point2f> > rep_map;
 		map<int, map<int, cv::Point2f> > normal_points_map;
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Generar Dispersion Reproyecciones
-	int frame = 21;//rand() % numFrames;
+	int frame = rand() % numFrames;
 	string imgname = mpInputReader->GetImageName(frame);
 	vector<int> visibleTracks = mpInputReader->GetTrackIds(frame);
 	map<int, cv::Point2f> kps = mpInputReader->GetPoints(frame);

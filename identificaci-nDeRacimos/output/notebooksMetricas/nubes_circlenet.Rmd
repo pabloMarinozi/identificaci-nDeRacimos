@@ -14,14 +14,28 @@ library(tidyr)
 ```{r}
 setwd("~/DHARMA/identificaci-nDeRacimos/identificaci-nDeRacimos/output/salidasICP/nubes_circlenet2")
 df <- "nubes_circlenet" %>%
-  paste0(c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,1),"_saved.csv") %>% 
+  paste0(c('0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8','1.0'),".csv") %>% 
   map(read_csv) %>% bind_rows() %>% unique() 
-# %>%
-#   left_join(read_csv("nube1_names.csv")) %>%
-#   left_join(read_csv("nube2_names.csv")) %>% 
-#   filter(name1 %in% buenas01) %>% 
-#   filter(name1 %in% buenas03) %>% mutate(corrida = "01_03")
 ```
+
+```{r message=FALSE, warning=FALSE}
+setwd("/home/pablo/DHARMA/identificaci-nDeRacimos/cloud_generator/output/circlenet_clouds_pares_de_frames")
+get_tracks <- function(name_nube){
+  name_nube %>% str_replace(".ply",".csv") %>% read_csv() %>% 
+    filter(X!=0 & Y!=0 & Z!=0) %>% pull(track_id) 
+}
+
+get_overlap <- function(nube1,nube2){
+  intersect(
+    get_tracks(nube1),
+    get_tracks(nube2)) %>% 
+    length()
+}
+df_with_overlap <- df %>% mutate(overlap = 
+                df %>% select(nube1,nube2) %>% pmap(get_overlap) %>% unlist())
+```
+
+
 
 ```{r}
 library(stringr)
@@ -32,16 +46,29 @@ df <- df %>% mutate(nube1_frame2 = nube1 %>% str_split("_") %>% map(tail,2) %>% 
 ```
 
 ```{r}
+horizontales <- df_with_overlap %>% filter(!grepl('131129', nube1) & !grepl('131129', nube2))
+```
+
+
+```{r}
 library(ggplot2)
-radios <- df$radio %>% unique()
-for (r in radios){
-  plot(ggplot(df %>% filter(radio == r)) +
-         geom_histogram(aes(x=matcheos, color=label, fill=label), position="dodge") +
-         scale_x_continuous(breaks = seq(0, 35, by = 1)) +
-         ggtitle(paste("radio:",r))
-  )
+histxRadio <- function(df){
+  radios <- df$radio %>% unique()
+  for (r in radios){
+    plot(ggplot(df %>% filter(radio == r)) +
+           geom_histogram(aes(x=matcheos, color=label, fill=label), position="stack") +
+           scale_x_continuous(breaks = seq(0, 35, by = 1)) +
+           ggtitle(paste("radio:",r))
+    )
+  }
 }
 ```
+
+```{r}
+histxRadio(horizontales)
+```
+
+
 
 Funciones para calcular F1
 ```{r}
@@ -74,16 +101,34 @@ getf1_data_filter <- function(m, data){
         mutate(m=m) 
 } 
 
+getf1_data_overlap <- function(m, data){
+  data %>%
+        filter(tamaño_nube1>m & tamaño_nube2>m) %>% 
+        mutate(fitness = matcheos/tamaño_nube1) %>% 
+        mutate(prediction = matcheos>m, labelm = overlap>m) %>%
+        group_by(radio) %>% summarise(
+        TP = sum(label==TRUE & labelm==TRUE & prediction==TRUE),
+        TN = sum(label==FALSE & prediction==FALSE),
+        FP = sum(label==FALSE & prediction==TRUE),
+        FN = sum(label==TRUE & labelm==TRUE & prediction==FALSE),
+        precission = TP/(TP+FP), recall = TP/(TP+FN),
+        F1 = 2*(precission*recall)/(precission+recall)) %>% 
+        mutate(m=m) 
+} 
+
 ```
 
 
 ```{r}
-f1_df <- 3:15 %>% map(getf1_data,df) %>% bind_rows()
-
+f1_df <- 3:15 %>% map(getf1_data,df_with_overlap) %>% bind_rows()
+f1_df_overlap <- 3:15 %>% map(getf1_data_overlap,df_with_overlap) %>% bind_rows()
+f1_horizontales <- 3:15 %>% map(getf1_data,horizontales) %>% bind_rows()
+f1_horizontales_overlap <- 3:15 %>% map(getf1_data_overlap,horizontales) %>% bind_rows()
 ```
 
 ```{r}
-ggplot(f1_df) + 
+plotf1xRadio <- function(df){
+  ggplot(df) + 
   geom_line(aes(x = m, y = F1)) +
   geom_line(aes(x = m, y = precission, col="precission")) +
   geom_line(aes(x = m, y = recall, col ="recall")) +
@@ -96,5 +141,12 @@ ggplot(f1_df) +
   panel.grid.major.x = element_line( size=.1, color="black" ),
            panel.grid.major.y = element_line( size=.1, color="black" )
     )
+}
+
+```
+
+```{r}
+plotf1xRadio(f1_horizontales_overlap)
+plotf1xRadio(f1_horizontales)
 ```
 
