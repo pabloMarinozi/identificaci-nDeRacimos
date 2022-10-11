@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
 	vector<map<int, map<int, cv::Point2f> > > rep_acumulator;
 	vector<vector<long unsigned int> > kfIds_acumulator;
-	while(mvPairs.size()>best){
+	while(mvPairs.size()>best && !initialized){
 
 		tie(num,f0,f1) = mvPairs[best];
 		
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
 		
 		//Iterar sobre los frames para procesar las observaciones
-		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames();
+		vector<int> kfRestantes = mpInputReader->GetNotInitialFrames(0);
 		for (auto i : kfRestantes) {
 			mpMapManager->CreateNewKeyFrame(i, mpInputReader);
 			scaleFactor = mpMapManager->GetScaleFactor(distancia_calibracion,
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Generar Dispersion Reproyecciones
-	int frame = rand() % numFrames;
+	/*int frame = rand() % numFrames;
 	string imgname = mpInputReader->GetImageName(frame);
 	vector<int> visibleTracks = mpInputReader->GetTrackIds(frame);
 	map<int, cv::Point2f> kps = mpInputReader->GetPoints(frame);
@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
 		//Guarda la imagen
 		string ruta = string(outputFolder)+"/t"+to_string(frame)+"_b"+to_string(t)+".png";
 		cv::imwrite(ruta,img);
-	}
+	}*/
 
 	
 
