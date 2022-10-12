@@ -8,7 +8,18 @@ import open3d as o3d
 import numpy as np
 import pandas as pd
 from time import time
+import pandas as pd
 from viewer import point_cloud_viewer
+
+def get_points_ids(dir, name):
+    df = pd.read_csv(dir + name[:-3] +'csv')
+    idx_ceros = df[df['Z'] == 0].index
+    df = df.drop(idx_ceros)
+    return list(df['track_id'])
+
+
+def get_overlap(ids_a, ids_b):
+    return len(list(set(ids_a) & set(ids_b)))
 
 
 def main(args=None):
@@ -20,7 +31,7 @@ def main(args=None):
         -INPUT:
             --input_dir: folder with inputs
         -OUTPUT:
-            --output_dir: Carpeta de salida dondese creará el archivo labels
+            --output_dir: Carpeta de salida donde se creará el archivo labels
         """
     )
     parser.add_argument('-i','--input_dir', type=str, required=True)
@@ -32,16 +43,16 @@ def main(args=None):
     n_clouds = len(inputs_df.index)
     clouds = {} #dict containing point clouds
     cloud_idx = 0
-    clouds_per_video = 20
+    clouds_per_video = 2
     lab = 0
     clouds_counter = 0
     a = 0
     b = 6
-    while_breaker=0
+    while_breaker = 0
     name_debug = []
     while cloud_idx < 3*clouds_per_video:
         if while_breaker > 10:
-            a+=1
+            a += 1
             while_breaker =15
             if a+b > 24:
                 a = 0
@@ -54,7 +65,8 @@ def main(args=None):
                 if name.endswith(f'{a}_{a + b}.ply'):
                     while_breaker -= 1
                     cloud = o3d.io.read_point_cloud(args.input_dir + name)
-                    clouds[cloud_idx] = [name, cloud, label]
+                    points_ids = get_points_ids(args.input_dir, name)
+                    clouds[cloud_idx] = [name, cloud, label, points_ids]
                     name_debug.append(name)
                     print(name)
                     print(cloud_idx)
@@ -102,13 +114,17 @@ def main(args=None):
     for i, thresh in enumerate(threshold_percentage_list):
         print(f"thresh : {thresh}; iter {i+1} de {len(threshold_percentage_list)}")
         for step in angle_step_list:
-            result = np.empty((int(((n_clouds ** 2) / 2) + n_clouds/2), 9), dtype=object)
+            result = np.empty((int(((n_clouds ** 2) / 2) + n_clouds/2), 10), dtype=object)
             counter = 0
             stime=time()
             for i in range(len(clouds)):
                 for j in range(i, len(clouds)):
                     cn1 = clouds[i][0]
                     cn2 = clouds[j][0]
+                    if cn1[:18] == cn2[:18]:
+                        overlap = get_overlap(clouds[i][-1], clouds[j][-1])
+                    else:
+                        overlap = 0
                     source = clouds[i][1]
                     target = clouds[j][1]
                     label = clouds[i][2] == clouds[j][2]
@@ -117,16 +133,16 @@ def main(args=None):
                     metric = icp_scaled_and_aligned(source, target, thresh,
                                                     n_neighbors, angle)
                     giros = 2 / step
-                    result[counter, :] = cn1, metric[1], cn2, metric[2], metric[0], label, metric[3], thresh, giros
+                    result[counter, :] = cn1, metric[1], cn2, metric[2], metric[0], overlap, label, metric[3], thresh, giros
 
                     # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
 
                     # print(counter, n_clouds, metric[0])
-                    print(cn1,cn2)
-                    print(f"counter: {counter+1}/{int(((len(clouds)**2)/2)+len(clouds)/2)}, matcheos: {metric[0]}")
+                    print(cn1, cn2)
+                    print(f"counter: {counter+1}/{int(((len(clouds)**2)/2)+len(clouds)/2)}, matcheos: {metric[0]}, overlap: {overlap}")
                     counter += 1
 
-            frame = pd.DataFrame(result, columns=["nube1", "tamaño_nube1", "nube2", "tamaño_nube2", "matcheos", "label", "rmse", "radio", "giros"])
+            frame = pd.DataFrame(result, columns=["nube1", "tamaño_nube1", "nube2", "tamaño_nube2", "matcheos", "overlap", "label", "rmse", "radio", "giros"])
             path = args.output_dir + "/nubes_circlenet"+str(thresh)+".csv"
             frame.to_csv(path)
             bucle_time = time()
