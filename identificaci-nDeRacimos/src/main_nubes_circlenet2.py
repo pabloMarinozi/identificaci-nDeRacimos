@@ -38,7 +38,7 @@ def main(args=None):
     parser.add_argument('-o','--output_dir', type=str, required=True)
     args = parser.parse_args(args)
 
-    inputs_path = args.input_dir+"/labels.csv"
+    inputs_path = args.input_dir+"/labelsmios.csv"
     inputs_df = pd.read_csv(inputs_path)
     n_clouds = len(inputs_df.index)
     clouds = {} #dict containing point clouds
