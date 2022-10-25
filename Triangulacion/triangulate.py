@@ -5,7 +5,7 @@ import os
 
 # Directorio que contiene a todos los cuarteles a procesar
 #input_dir = "../2022-02-17_Zuccardi_Piedra-Infinita_Volumetria/data_sources/fallidas_reintento"
-input_dir = "/home/pablo/DHARMA/berry_tracking/output/misnubes"
+input_dir = "/home/pablo/DHARMA/berry_tracking/output/VID_20220217_101324/mod4"
 image_dir = "/home/pablo/DHARMA/berry_tracking/output/misnubes"
 # Extesión de las imágenes a procesar (sin el punto)
 ext_img = "png"
