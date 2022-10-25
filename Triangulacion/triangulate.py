@@ -5,15 +5,15 @@ import os
 
 # Directorio que contiene a todos los cuarteles a procesar
 #input_dir = "../2022-02-17_Zuccardi_Piedra-Infinita_Volumetria/data_sources/fallidas_reintento"
-input_dir = "/home/pablo/DHARMA/berry_tracking/output/misnubes"
-image_dir = "/home/pablo/DHARMA/berry_tracking/output/misnubes"
+input_dir = "/mnt/datos/datasets/capturas_optima/berry_tracking/VID_20220217_124116/mod_debug4/"
+image_dir = "/mnt/datos/datasets/capturas_optima/berry_tracking/VID_20220217_124116"
 # Extesión de las imágenes a procesar (sin el punto)
 ext_img = "png"
-# Calibración usada durante la reconstruccion 3D y estimación de volúmenes
+# Calibración usada durante la reconstrucción 3D y estimación de volúmenes
 calib = 2
 # Distancia entre los puntos de validación
 val_dist = 2
-# Nombre del directorio de salida para la info de los volumenes de  cada cuartel
+# Nombre del directorio de salida para la info de los volúmenes de cada cuartel
 path_vol = "volumes"
 
 print("\n\n")
@@ -21,6 +21,7 @@ print("#"*80)
 print("\n>>> COMPUTE VOLUMES FROM BUNDLES")
 
 calib_yaml = "camaraMaurosalentein.yaml"
+# calib_yaml = "camaraMaurosalenteinVertical.yaml"
 
 path_temp = os.path.join(input_dir, "volumes/")
 if not os.path.exists(path_temp):
