@@ -17,6 +17,13 @@ def get_points_ids(dir, name):
     df = df.drop(idx_ceros)
     return list(df['track_id'])
 
+def check_labels(label_1, label_2, groups):
+    if label_1 in groups[0] and label_2 in groups[1]:
+        return False
+    elif label_1 in groups[1] and label_2 in groups[0]:
+        return False
+    else:
+        return True
 
 def get_overlap(ids_a, ids_b):
     return len(list(set(ids_a) & set(ids_b)))
@@ -60,23 +67,29 @@ def main(args=None):
 
     #times = np.zeros((n_clouds, n_clouds), dtype=float)
     start_time = time()
-    rows = []
+    labels_grupo_1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10]
+    labels_grupo_2 = [0, 1, 8]
+    groups = [labels_grupo_1, labels_grupo_2]
     n_clouds = len(clouds)
-
     for i, thresh in enumerate(threshold_percentage_list):
-        print(f"thresh : {thresh}; iter {i+1} de {len(threshold_percentage_list)}")
+        print(f"thresh: {thresh} ; iter {i+1} de {len(threshold_percentage_list)}")
         for step in angle_step_list:
-            result = np.empty((int(((n_clouds ** 2) / 2) + n_clouds/2), 10), dtype=object)
+            result = np.empty((234, 10), dtype=object) #int(((n_clouds ** 2) / 2) + n_clouds/2)
             counter = 0
-            stime=time()
+            stime = time()
             for i in range(len(clouds)):
                 for j in range(i, len(clouds)):
                     cn1 = clouds[i][0]
                     cn2 = clouds[j][0]
+                    label_1 = clouds[i][2]
+                    label_2 = clouds[j][2]
+                    if check_labels(label_1, label_2, groups):
+                        continue
                     if cn1[:18] == cn2[:18]:
                         overlap = get_overlap(clouds[i][-1], clouds[j][-1])
                     else:
                         overlap = 0
+
                     source = clouds[i][1]
                     target = clouds[j][1]
                     label = clouds[i][2] == clouds[j][2]
@@ -89,13 +102,11 @@ def main(args=None):
 
                     # Devuelve: (cantidad de matcheos, cantidad de puntos nube source, cantidad de puntos nube target, rmse, conjunto de correspondencia)
 
-                    # print(counter, n_clouds, metric[0])
                     print(cn1, cn2)
-                    print(f"counter: {counter+1}/{int(((len(clouds)**2)/2)+len(clouds)/2)}, matcheos: {metric[0]}, overlap: {overlap}")
+                    print(f"counter: {counter+1}/234, matcheos: {metric[0]}, overlap: {overlap}") #{int(((len(clouds)**2)/2)+len(clouds)/2)}
                     counter += 1
-
             frame = pd.DataFrame(result, columns=["nube1", "tamaño_nube1", "nube2", "tamaño_nube2", "matcheos", "overlap", "label", "rmse", "radio", "giros"])
-            path = args.output_dir + "/nubes_circlenet"+str(thresh)+".csv"
+            path = args.output_dir + "/verticales_corregidas"+str(thresh)+".csv"
             frame.to_csv(path)
             bucle_time = time()
             print(bucle_time - start_time)
