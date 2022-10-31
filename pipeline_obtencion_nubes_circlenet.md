@@ -4,7 +4,7 @@
 
 1. Ejecutar el notebook [berry_tracking.ipynb](https://colab.research.google.com/drive/190oIcmfRJJuopcApVaGFiqxiQDR9Utjk?usp=sharing) y descargar el archivo output.zip
 
-2. Ejecutar el notebook nubes_circlenet.Rmd que recibe los detections.csv que generó berry_tracking y genera los bundles.csv que necesita la triangulación.
+2. Ejecutar el notebook [bundles_from_detections.Rmd](https://github.com/pabloMarinozi/identificaci-nDeRacimos/blob/master/bundles_from_detections.Rmd) que recibe los detections.csv que generó berry_tracking y genera los bundles.csv que necesita la triangulación.
 
 La salida es un archivo bundles.csv en cada carpeta de racimo/video que contiene las coordenadas 2d de las bayas en varias imágenes para poder hacer una reconstrucción
 
