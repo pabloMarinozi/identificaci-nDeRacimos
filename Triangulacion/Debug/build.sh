@@ -3,10 +3,10 @@
 #Declaro variables
 opencvInclude=/usr/include/opencv4/
 eigen3Include=/usr/include/eigen3
-projectInclude=/home/cdiaz/Triangulacion/include
+projectInclude=/content/identificaci-nDeRacimos/Triangulacion/include
 #/home/pablo/eclipse-workspace/TrianguladoCentroBayas/include
 opencvLib=/usr/lib/x86_64-linux-gnu
-g2oLib=/home/cdiaz/Triangulacion/include/Thirdparty/g2o/lib
+g2oLib=/content/identificaci-nDeRacimos/Triangulacion/include/Thirdparty/g2o/lib
 #/home/pablo/eclipse-workspace/TrianguladoCentroBayas/include/Thirdparty/g2o/lib
 
 #Compilo los fuentes
