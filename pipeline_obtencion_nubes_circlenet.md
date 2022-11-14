@@ -22,7 +22,8 @@ Las salidas son:
 
 4. Correr el script  clouds_from_individual_grapes_centers.py en la carpeta cloud_generator. Este genera los archivos .ply de cada nube a partir de la info almacenada en Reproyecciones.csv
 
-* --input_csv: path to input csv
+* --csv-name: nombre del archivo csv con la info de las reconstrucciones
+* --base-dir: carpeta que contiene todos los archivos cuyo nombre sea csv-name
 * --output_dir: Carpeta de salida, se almacenan los .ply de las nubes del csv
 
 5. Correr el script labeler.py que genera el archivo labels.csv que contiene los ground truth de la identiicación (nubes que surgieron del mismo racimo tienen la misma etiqueta)
