@@ -61,5 +61,5 @@ get_bundles_csv_pairs <- function(name,mod){
 
 name <- scan(direc,
              what="", sep="\n")
-mod <- modn
+mod <- c(modn)
 crossing(name,mod) %>% pmap(get_bundles_csv)
