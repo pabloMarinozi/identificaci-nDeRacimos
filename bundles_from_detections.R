@@ -59,7 +59,6 @@ get_bundles_csv_pairs <- function(name,mod){
     write_csv(paste0(dir,"/mod",mod,"/bundles.csv"),na = "NULL")
 }
 
-name <- scan(direc,
-             what="", sep="\n")
+name <- direc
 mod <- c(modn)
 crossing(name,mod) %>% pmap(get_bundles_csv)
