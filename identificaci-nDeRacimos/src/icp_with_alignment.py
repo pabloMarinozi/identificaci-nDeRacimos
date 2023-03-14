@@ -3,11 +3,13 @@ import random
 import open3d as o3d
 import numpy as np
 from viewer import point_cloud_viewer
-from cloud_management import get_minimum_distance,conform_point_cloud
+from cloud_management import get_minimum_distance,conform_point_cloud, get_median_distance_to_second_neighbord
+import statistics
+import bisect
 
 def get_neighbors_generator(pc, n_neighbors):
     """
-    for each iteration return a tuple with 2 elements, 1. each point of the point cloud
+    at each iteration return a tuple with 2 elements, 1. each point of the point cloud
     2. the n_neighbors of the given point in 1.
     inputs:
         pc: PointCloud object (open3d)
@@ -15,7 +17,7 @@ def get_neighbors_generator(pc, n_neighbors):
     return:
         tuple:
             - numpy array with shape (1, 3),are the coordinates of the reference point
-            - numpy matrix with shape (n_neighbors, 3), are the coordinates of the
+            - numpy matrix with shape (n_neighbors, 3), that contains the coordinates of the
               n_neighbors points
     """
     pc_tree = o3d.geometry.KDTreeFlann(pc)
@@ -282,7 +284,7 @@ def icp_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
 
 
 
-def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, angle_step):
+def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, angle_step, distance_criterion='median'):
     """
     Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
     result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his nearest neighbor
@@ -301,8 +303,8 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
         tuple that contains:
             - int,  number of matching points
             - n_points_source: int, source's number of points
-            - n_points_target: int, target' number of points
-            - rmse: float, root mean square error
+            - n_points_target: int, target's number of points
+            - rmse: float, root mean-square error
             - numpy matrix with shape (n, 2), Is the correspondence set. n is the number of matching points, each row
              correspond with a match pair, first number correspond with an index of the source cloud and the second
              number is the index of the target point.
@@ -327,7 +329,16 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
                     source_copy = copy.deepcopy(source)
                     # point_cloud_viewer([target, source_copy])
                     source_copy.scale(scale_factor, (0, 0, 0))
-                    minimun_distance = get_minimum_distance(source_copy)
+                    if distance_criterion == 'min':
+                        reference_distance = get_minimum_distance(source_copy)
+                    elif distance_criterion == 'median':
+                        reference_distance = get_median_distance_to_second_neighbord(source_copy)
+                    elif distance_criterion == '':
+                        reference_distance = dist_target
+                    # Si la nube source se achica mucho respecto a la target
+                    # significa que no son la misma nube, por ende tomar la mediana de la distancia de la nube
+                    # para el radio de matcheo implicará que matcheen nubes que no deben matchear
+
                     rot1_to_z, transl1_to_z = get_RT_in_z_direction(point1, nn_points1[i], dist_target)
                     rot2_to_z, transl2_to_z = get_RT_in_z_direction(point2, nn_points2[j], dist_target)
 
@@ -345,7 +356,7 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
                     source_copy.paint_uniform_color([0, 0, 1])
                     target_copy.paint_uniform_color([1, 0, 1])
                     # o3d.visualization.draw_geometries([target_copy, source_copy])
-                    icp = icp_search_arround_z(source_copy, target_copy, threshold_percentage*minimun_distance, angle_step)
+                    icp = icp_search_arround_z(source_copy, target_copy, threshold_percentage*reference_distance, angle_step)
                     if icp is not None:
                         if icp.fitness > highest_fitness:
                             highest_fitness = icp.fitness
@@ -355,3 +366,5 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
         return int(best_icp.fitness * n_points_source), n_points_source, n_points_target, best_icp.inlier_rmse, np.asarray(best_icp.correspondence_set)
     else:
         return 0, n_points_source, n_points_target, np.infty, []
+
+
