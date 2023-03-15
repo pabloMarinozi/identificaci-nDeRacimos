@@ -284,7 +284,7 @@ def icp_with_pre_alignment(source, target, threshold, n_neighbors, angle_step):
 
 
 
-def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, angle_step, distance_criterion='median'):
+def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, angle_step, distance_criterion='target'):
     """
     Compute icp algorithm to a set of alignments between the source and target clouds. The set of alignments is the
     result of align each point and his n_neighbors nearest neighbors from the source cloud with each point and his nearest neighbor
@@ -333,7 +333,7 @@ def icp_scaled_and_aligned(source, target, threshold_percentage, n_neighbors, an
                         reference_distance = get_minimum_distance(source_copy)
                     elif distance_criterion == 'median':
                         reference_distance = get_median_distance_to_second_neighbord(source_copy)
-                    elif distance_criterion == '':
+                    elif distance_criterion == 'target': #es la distancia del par target en esta iteración
                         reference_distance = dist_target
                     # Si la nube source se achica mucho respecto a la target
                     # significa que no son la misma nube, por ende tomar la mediana de la distancia de la nube

@@ -25,8 +25,8 @@ def get_minimum_distance(cloud):
 def get_mean_distance(cloud, n_neighbors=1):
     index_pair_set = set()
     index_pair_list = []
-    pc_tree = o3d.geometry.KDTreeFlann(pc)
-    points = np.asarray(pc.points)
+    pc_tree = o3d.geometry.KDTreeFlann(cloud)
+    points = np.asarray(cloud.points)
     distances_list = []
     for point in points:
         a, idxs, squared_distances = pc_tree.search_knn_vector_3d(point, n_neighbors + 1)
@@ -40,8 +40,8 @@ def get_mean_distance(cloud, n_neighbors=1):
 def get_median_distance_to_second_neighbord(cloud, n_neighbors=2):
     index_pair_set = set()
     index_pair_list = []
-    pc_tree = o3d.geometry.KDTreeFlann(pc)
-    points = np.asarray(pc.points)
+    pc_tree = o3d.geometry.KDTreeFlann(cloud)
+    points = np.asarray(cloud.points)
     distances_list = []
     for point in points:
         a, idxs, squared_distances = pc_tree.search_knn_vector_3d(point, n_neighbors + 1)
